@@ -1,0 +1,27 @@
+# Ignore build folders and intermediate files
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+.vs/
+*.VC.db
+*.VC.opendb
+
+# Ignore user-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Ignore compiled binary files
+*.exe
+*.dll
+*.pdb
+*.lib
+
+# Ignore Unreal Engine autosave files
+Autosaves/
+
+# Ignore logs
+*.log
