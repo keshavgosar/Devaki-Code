@@ -59,7 +59,17 @@ protected:
 	UInputAction* InteractionAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* AttackAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* AaravMappingContext;
+
+	/*
+	 * Animation Montages
+	 */
+	
+	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
+	UAnimMontage* AaravAttackMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float WalkSpeed = 300.f;
@@ -70,7 +80,8 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void SprintStart(const FInputActionValue& Value);
-	void SprintCompleted(const FInputActionValue& Valuw);
+	void SprintCompleted(const FInputActionValue& Value);
+	void Attack(const FInputActionValue& Value);
 
 	void PerformInteractionTrace();
 	void Interact();

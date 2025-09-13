@@ -101,9 +101,42 @@ void AAarav::SprintStart(const FInputActionValue& Value)
 	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 }
 
-void AAarav::SprintCompleted(const FInputActionValue& Valuw)
+void AAarav::SprintCompleted(const FInputActionValue& Value)
 {
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+}
+
+void AAarav::Attack(const FInputActionValue& Value)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	
+	if (AnimInstance && AaravAttackMontage)
+	{
+		AnimInstance->Montage_Play(AaravAttackMontage);
+
+		int32 AttackVal = FMath::RandRange(0, 1);
+		FName SectionName = FName();
+
+		switch (AttackVal)
+		{
+			
+		case 0:
+			SectionName = "Attack1";
+			break;
+
+		case 1:
+			SectionName = "Attack2";
+			break;
+
+		default:
+			break;
+			
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName);
+		
+	}
+	
 }
 
 void AAarav::PerformInteractionTrace()
@@ -169,6 +202,7 @@ void AAarav::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Started, this, &AAarav::SprintStart);
 		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Completed, this, &AAarav::SprintCompleted);
 		EnhancedInput->BindAction(InteractionAction, ETriggerEvent::Triggered, this, &AAarav::Interact);
+		EnhancedInput->BindAction(AttackAction, ETriggerEvent::Triggered, this , &AAarav::Attack);
 	}
 
 }
