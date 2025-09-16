@@ -68,8 +68,42 @@ void AAarav::RemoveItem(FName ItemId)
 	UE_LOG(LogTemp, Warning, TEXT("Item Removed: %s"), *ItemId.ToString());
 }
 
+void AAarav::PlayAttackMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	
+	if (AnimInstance && AaravAttackMontage)
+	{
+		AnimInstance->Montage_Play(AaravAttackMontage);
+
+		int32 AttackVal = FMath::RandRange(0, 1);
+		FName SectionName = FName();
+
+		switch (AttackVal)
+		{
+			
+		case 0:
+			SectionName = "Attack1";
+			break;
+
+		case 1:
+			SectionName = "Attack2";
+			break;
+
+		default:
+			break;
+			
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName);
+			
+	}
+}
+
 void AAarav::Move(const FInputActionValue& Value)
 {
+	if (ActionState == EActionState::EAS_Attacking) return;
+	
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (Controller && MovementVector != FVector2D::ZeroVector)
@@ -98,45 +132,27 @@ void AAarav::Look(const FInputActionValue& Value)
 
 void AAarav::SprintStart(const FInputActionValue& Value)
 {
+	if (ActionState == EActionState::EAS_Attacking) return;
+	
 	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 }
 
 void AAarav::SprintCompleted(const FInputActionValue& Value)
 {
+	if (ActionState == EActionState::EAS_Attacking) return;
+	
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
 void AAarav::Attack(const FInputActionValue& Value)
 {
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	const bool bCanAttack = ActionState == EActionState::EAS_Unoccupied && CharacterState != ECharacterState::ECS_Unequipped;
 	
-	if (AnimInstance && AaravAttackMontage)
+	if (bCanAttack)
 	{
-		AnimInstance->Montage_Play(AaravAttackMontage);
-
-		int32 AttackVal = FMath::RandRange(0, 1);
-		FName SectionName = FName();
-
-		switch (AttackVal)
-		{
-			
-		case 0:
-			SectionName = "Attack1";
-			break;
-
-		case 1:
-			SectionName = "Attack2";
-			break;
-
-		default:
-			break;
-			
-		}
-
-		AnimInstance->Montage_JumpToSection(SectionName);
-		
+		PlayAttackMontage();
+		ActionState = EActionState::EAS_Attacking;
 	}
-	
 }
 
 void AAarav::PerformInteractionTrace()
@@ -205,5 +221,10 @@ void AAarav::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInput->BindAction(AttackAction, ETriggerEvent::Triggered, this , &AAarav::Attack);
 	}
 
+}
+
+void AAarav::AttackEnd()
+{
+	ActionState = EActionState::EAS_Unoccupied;
 }
 

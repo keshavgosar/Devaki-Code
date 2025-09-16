@@ -36,6 +36,12 @@ public:
 protected:
 
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
+	
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	EActionState ActionState = EActionState::EAS_Unoccupied;
+
+	UFUNCTION(BlueprintCallable)
+	void AttackEnd();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	USpringArmComponent* CameraBoom;
@@ -70,6 +76,8 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
 	UAnimMontage* AaravAttackMontage;
+
+	void PlayAttackMontage();
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float WalkSpeed = 300.f;
