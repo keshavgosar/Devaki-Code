@@ -13,6 +13,7 @@ class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 class AItem;
+class AWeapon;
 
 
 UCLASS()
@@ -70,6 +71,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* AaravMappingContext;
 
+	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	AWeapon* EquippedWeapon;
+
 	/*
 	 * Animation Montages
 	 */
@@ -77,7 +81,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
 	UAnimMontage* AaravAttackMontage;
 
+	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
+	UAnimMontage* EquipMontage;
+
 	void PlayAttackMontage();
+	void PlayEquipMontage(FName SectionName);
+
+	bool CanDisarm();
+	bool CanArm();
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float WalkSpeed = 300.f;

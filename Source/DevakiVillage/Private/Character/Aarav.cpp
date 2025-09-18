@@ -100,6 +100,17 @@ void AAarav::PlayAttackMontage()
 	}
 }
 
+void AAarav::PlayEquipMontage(FName SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && EquipMontage)
+	{
+		AnimInstance->Montage_Play(EquipMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, EquipMontage);
+	}
+}
+
 void AAarav::Move(const FInputActionValue& Value)
 {
 	if (ActionState == EActionState::EAS_Attacking) return;
@@ -192,7 +203,32 @@ void AAarav::Interact()
 	{
 		OverlappedWeapon->Equip(GetMesh(), FName("RightHandSocket"));
 		CharacterState = ECharacterState::ECS_OneHandWeaponEquipped;
+		OverlappedItem = nullptr;
+		EquippedWeapon = OverlappedWeapon;
 	}
+	else
+	{
+		if(CanDisarm())
+		{
+			PlayEquipMontage(FName("Unequip"));
+			CharacterState = ECharacterState::ECS_Unequipped;
+		}
+		else if(CanArm())
+		{
+			PlayEquipMontage(FName("Equip"));
+			CharacterState = ECharacterState::ECS_OneHandWeaponEquipped;
+		}
+	}
+}
+
+bool AAarav::CanDisarm()
+{
+	return ActionState == EActionState::EAS_Unoccupied && CharacterState != ECharacterState::ECS_Unequipped;
+}
+
+bool AAarav::CanArm()
+{
+	return ActionState == EActionState::EAS_Unoccupied && CharacterState == ECharacterState::ECS_Unequipped && EquippedWeapon;
 }
 
 
