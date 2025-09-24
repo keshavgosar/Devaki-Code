@@ -51,69 +51,36 @@ void AAarav::BeginPlay()
 	
 }
 
-void AAarav::AddItem(FName ItemId)
+// Called every frame
+void AAarav::Tick(float DeltaTime)
 {
-	InventoryItems.Add(ItemId);
-	UE_LOG(LogTemp, Warning, TEXT("Item Added: %s"), *ItemId.ToString());
+	Super::Tick(DeltaTime);
+
+	PerformInteractionTrace();
+
 }
 
-bool AAarav::HasItem(FName ItemId) const
+// Called to bind functionality to input
+void AAarav::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	return InventoryItems.Contains(ItemId);
-}
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-void AAarav::RemoveItem(FName ItemId)
-{
-	InventoryItems.Remove(ItemId);
-	UE_LOG(LogTemp, Warning, TEXT("Item Removed: %s"), *ItemId.ToString());
-}
-
-void AAarav::PlayAttackMontage()
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	
-	if (AnimInstance && AaravAttackMontage)
+	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		AnimInstance->Montage_Play(AaravAttackMontage);
-
-		int32 AttackVal = FMath::RandRange(0, 1);
-		FName SectionName = FName();
-
-		switch (AttackVal)
-		{
-			
-		case 0:
-			SectionName = "Attack1";
-			break;
-
-		case 1:
-			SectionName = "Attack2";
-			break;
-
-		default:
-			break;
-			
-		}
-
-		AnimInstance->Montage_JumpToSection(SectionName);
-			
+		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAarav::Move);
+		EnhancedInput->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAarav::Look);
+		EnhancedInput->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::Jump);
+		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Started, this, &AAarav::SprintStart);
+		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Completed, this, &AAarav::SprintCompleted);
+		EnhancedInput->BindAction(InteractionAction, ETriggerEvent::Triggered, this, &AAarav::Interact);
+		EnhancedInput->BindAction(AttackAction, ETriggerEvent::Triggered, this , &AAarav::Attack);
 	}
-}
 
-void AAarav::PlayEquipMontage(FName SectionName)
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance && EquipMontage)
-	{
-		AnimInstance->Montage_Play(EquipMontage);
-		AnimInstance->Montage_JumpToSection(SectionName, EquipMontage);
-	}
 }
 
 void AAarav::Move(const FInputActionValue& Value)
 {
-	if (ActionState == EActionState::EAS_Attacking) return;
+	if (ActionState != EActionState::EAS_Unoccupied) return;
 	
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
@@ -143,14 +110,14 @@ void AAarav::Look(const FInputActionValue& Value)
 
 void AAarav::SprintStart(const FInputActionValue& Value)
 {
-	if (ActionState == EActionState::EAS_Attacking) return;
+	if (ActionState != EActionState::EAS_Unoccupied) return;
 	
 	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 }
 
 void AAarav::SprintCompleted(const FInputActionValue& Value)
 {
-	if (ActionState == EActionState::EAS_Attacking) return;
+	if (ActionState != EActionState::EAS_Unoccupied) return;
 	
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
@@ -212,12 +179,74 @@ void AAarav::Interact()
 		{
 			PlayEquipMontage(FName("Unequip"));
 			CharacterState = ECharacterState::ECS_Unequipped;
+			ActionState = EActionState::EAS_EquippingWeapon;
 		}
 		else if(CanArm())
 		{
 			PlayEquipMontage(FName("Equip"));
 			CharacterState = ECharacterState::ECS_OneHandWeaponEquipped;
+			ActionState = EActionState::EAS_EquippingWeapon;
 		}
+	}
+}
+
+void AAarav::AddItem(FName ItemId)
+{
+	InventoryItems.Add(ItemId);
+	UE_LOG(LogTemp, Warning, TEXT("Item Added: %s"), *ItemId.ToString());
+}
+
+bool AAarav::HasItem(FName ItemId) const
+{
+	return InventoryItems.Contains(ItemId);
+}
+
+void AAarav::RemoveItem(FName ItemId)
+{
+	InventoryItems.Remove(ItemId);
+	UE_LOG(LogTemp, Warning, TEXT("Item Removed: %s"), *ItemId.ToString());
+}
+
+void AAarav::PlayAttackMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	
+	if (AnimInstance && AaravAttackMontage)
+	{
+		AnimInstance->Montage_Play(AaravAttackMontage);
+
+		int32 AttackVal = FMath::RandRange(0, 1);
+		FName SectionName = FName();
+
+		switch (AttackVal)
+		{
+			
+		case 0:
+			SectionName = "Attack1";
+			break;
+
+		case 1:
+			SectionName = "Attack2";
+			break;
+
+		default:
+			break;
+			
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName);
+			
+	}
+}
+
+void AAarav::PlayEquipMontage(FName SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && EquipMontage)
+	{
+		AnimInstance->Montage_Play(EquipMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, EquipMontage);
 	}
 }
 
@@ -231,32 +260,24 @@ bool AAarav::CanArm()
 	return ActionState == EActionState::EAS_Unoccupied && CharacterState == ECharacterState::ECS_Unequipped && EquippedWeapon;
 }
 
-
-// Called every frame
-void AAarav::Tick(float DeltaTime)
+void AAarav::Disarm()
 {
-	Super::Tick(DeltaTime);
-
-	PerformInteractionTrace();
-
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->AttachToSocket(GetMesh(), FName("SpineSocket"));
+	}
+}
+void AAarav::Arm()
+{
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->AttachToSocket(GetMesh(), FName("RightHandSocket"));
+	}
 }
 
-// Called to bind functionality to input
-void AAarav::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AAarav::FinishEquipping()
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAarav::Move);
-		EnhancedInput->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAarav::Look);
-		EnhancedInput->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::Jump);
-		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Started, this, &AAarav::SprintStart);
-		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Completed, this, &AAarav::SprintCompleted);
-		EnhancedInput->BindAction(InteractionAction, ETriggerEvent::Triggered, this, &AAarav::Interact);
-		EnhancedInput->BindAction(AttackAction, ETriggerEvent::Triggered, this , &AAarav::Attack);
-	}
-
+	ActionState = EActionState::EAS_Unoccupied;
 }
 
 void AAarav::AttackEnd()

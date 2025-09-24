@@ -90,6 +90,15 @@ protected:
 	bool CanDisarm();
 	bool CanArm();
 
+	UFUNCTION(BlueprintCallable)
+	void Arm();
+	
+	UFUNCTION(BlueprintCallable)
+	void Disarm();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishEquipping();
+
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float WalkSpeed = 300.f;
 
