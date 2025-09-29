@@ -10,6 +10,7 @@
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
+#include "Components/BoxComponent.h"
 #include "Items/Weapon.h"
 #include "Public/Interfaces/InteractableInterface.h"
 
@@ -77,6 +78,15 @@ void AAarav::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	}
 
 }
+
+void AAarav::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
+{
+	if (EquippedWeapon && EquippedWeapon->GetBoxComponent())
+	{
+		EquippedWeapon->GetBoxComponent()->SetCollisionEnabled(CollisionEnabled);
+	}
+}
+
 
 void AAarav::Move(const FInputActionValue& Value)
 {
