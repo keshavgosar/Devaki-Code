@@ -120,6 +120,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EpicGames.UHT", "..\..\..\U
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevakiVillageModuleRules", "Intermediate\Build\BuildRulesProjects\DevakiVillageModuleRules\DevakiVillageModuleRules.csproj", "{94B580A1-06A7-38D8-9443-C9E32E561057}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketplaceRules", "..\..\..\UE_5.5.4\UE_5.5\Engine\Intermediate\Build\BuildRulesProjects\MarketplaceRules\MarketplaceRules.csproj", "{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UE5ProgramRules", "..\..\..\UE_5.5.4\UE_5.5\Engine\Intermediate\Build\BuildRulesProjects\UE5ProgramRules\UE5ProgramRules.csproj", "{500C5981-EEF9-36C2-B61E-C70206EB4919}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UE5Rules", "..\..\..\UE_5.5.4\UE_5.5\Engine\Intermediate\Build\BuildRulesProjects\UE5Rules\UE5Rules.csproj", "{B8B95231-AE98-33EB-910C-25685BCD2E85}"
@@ -2136,6 +2138,46 @@ Global
 		{94B580A1-06A7-38D8-9443-C9E32E561057}.Shipping|Win64-arm64.Build.0 = Development|Any CPU
 		{94B580A1-06A7-38D8-9443-C9E32E561057}.Shipping|Win64-arm64ec.ActiveCfg = Development|Any CPU
 		{94B580A1-06A7-38D8-9443-C9E32E561057}.Shipping|Win64-arm64ec.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame Editor|Android.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame Editor|Android.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame Editor|Win64.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame Editor|Win64.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame Editor|Win64-arm64.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame Editor|Win64-arm64.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame Editor|Win64-arm64ec.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame Editor|Win64-arm64ec.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame|Android.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame|Android.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame|Win64.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame|Win64.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame|Win64-arm64.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame|Win64-arm64.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame|Win64-arm64ec.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.DebugGame|Win64-arm64ec.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development Editor|Android.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development Editor|Android.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development Editor|Win64.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development Editor|Win64.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development Editor|Win64-arm64.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development Editor|Win64-arm64.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development Editor|Win64-arm64ec.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development Editor|Win64-arm64ec.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development|Android.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development|Android.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development|Win64.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development|Win64.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development|Win64-arm64.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development|Win64-arm64.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development|Win64-arm64ec.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Development|Win64-arm64ec.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Shipping|Android.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Shipping|Android.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Shipping|Win64.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Shipping|Win64.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Shipping|Win64-arm64.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Shipping|Win64-arm64.Build.0 = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Shipping|Win64-arm64ec.ActiveCfg = Development|Any CPU
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC}.Shipping|Win64-arm64ec.Build.0 = Development|Any CPU
 		{500C5981-EEF9-36C2-B61E-C70206EB4919}.DebugGame Editor|Android.ActiveCfg = Development|Any CPU
 		{500C5981-EEF9-36C2-B61E-C70206EB4919}.DebugGame Editor|Android.Build.0 = Development|Any CPU
 		{500C5981-EEF9-36C2-B61E-C70206EB4919}.DebugGame Editor|Win64.ActiveCfg = Development|Any CPU
@@ -2274,6 +2316,7 @@ Global
 		{2C9BC9AD-0AD8-371E-9567-57E7CD095EA2} = {57713676-9DBE-331C-AD10-26632AC9EE0C}
 		{C97DF204-0E4E-3D28-95B1-87F0E8106DE5} = {57713676-9DBE-331C-AD10-26632AC9EE0C}
 		{94B580A1-06A7-38D8-9443-C9E32E561057} = {C2F57ECE-B26F-39D8-BDA7-C1D40BD8F180}
+		{FF0B9788-3022-3DEA-ACF9-CF967BD370BC} = {C2F57ECE-B26F-39D8-BDA7-C1D40BD8F180}
 		{500C5981-EEF9-36C2-B61E-C70206EB4919} = {C2F57ECE-B26F-39D8-BDA7-C1D40BD8F180}
 		{B8B95231-AE98-33EB-910C-25685BCD2E85} = {C2F57ECE-B26F-39D8-BDA7-C1D40BD8F180}
 	EndGlobalSection

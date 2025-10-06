@@ -42,6 +42,12 @@ void AAarav::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (GetMesh())
+	{
+		GetMesh()->HideBoneByName(TEXT("sword_bottom"), EPhysBodyOp::PBO_None);
+		GetMesh()->HideBoneByName(TEXT("sword_top"), EPhysBodyOp::PBO_None);
+	}
+
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -225,7 +231,7 @@ void AAarav::PlayAttackMontage()
 	{
 		AnimInstance->Montage_Play(AaravAttackMontage);
 
-		int32 AttackVal = FMath::RandRange(0, 1);
+		int32 AttackVal = FMath::RandRange(0, 2);
 		FName SectionName = FName();
 
 		switch (AttackVal)
@@ -237,6 +243,10 @@ void AAarav::PlayAttackMontage()
 
 		case 1:
 			SectionName = "Attack2";
+			break;
+
+		case 2:
+			SectionName = "Attack3";
 			break;
 
 		default:
