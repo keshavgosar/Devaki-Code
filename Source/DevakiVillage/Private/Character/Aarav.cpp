@@ -90,6 +90,7 @@ void AAarav::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
 	if (EquippedWeapon && EquippedWeapon->GetBoxComponent())
 	{
 		EquippedWeapon->GetBoxComponent()->SetCollisionEnabled(CollisionEnabled);
+		EquippedWeapon->IgnoreActors.Empty();
 	}
 }
 
@@ -259,7 +260,7 @@ void AAarav::PlayAttackMontage()
 	}
 }
 
-void AAarav::PlayEquipMontage(FName SectionName)
+void AAarav::PlayEquipMontage(const FName& SectionName)
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 

@@ -88,7 +88,7 @@ protected:
 	UAnimMontage* EquipMontage;
 
 	void PlayAttackMontage();
-	void PlayEquipMontage(FName SectionName);
+	void PlayEquipMontage(const FName& SectionName);
 
 	bool CanDisarm();
 	bool CanArm();
