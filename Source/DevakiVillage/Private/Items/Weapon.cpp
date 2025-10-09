@@ -71,22 +71,23 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		EndLocation,
 		FVector(0.5f, 0.5f, 0.5f),
 		BoxTraceStart->GetComponentRotation(),
-		TraceTypeQuery1,
+		ETraceTypeQuery::TraceTypeQuery1,
 		false,
 		ActorsToIgnore,
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::None,
 		BoxHit,
 		true
 		);
 
 	if (BoxHit.GetActor())
 	{
-		IHitInterface* HitActor = Cast<IHitInterface>(BoxHit.GetActor());
-		if (HitActor)
+		IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
+		if (HitInterface)
 		{
-			HitActor->GetHit(BoxHit.ImpactPoint);
-			IgnoreActors.AddUnique(BoxHit.GetActor());
+			HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint);
 		}
+		IgnoreActors.AddUnique(BoxHit.GetActor());
+		CreateFields(BoxHit.ImpactPoint);
 	}
 	
 }
