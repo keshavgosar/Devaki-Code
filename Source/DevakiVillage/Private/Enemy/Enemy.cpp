@@ -3,7 +3,9 @@
 
 #include "Enemy/Enemy.h"
 
+#include "Component/AttributeComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "HUD/HealthBarComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -18,7 +20,11 @@ AEnemy::AEnemy()
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetGenerateOverlapEvents(true);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-	
+
+	AttributeComponent = CreateDefaultSubobject<UAttributeComponent>(TEXT("AttributeComponent"));
+
+	HealthBarWidgetClass = CreateDefaultSubobject<UHealthBarComponent>(TEXT("HealthBar"));
+	HealthBarWidgetClass->SetupAttachment(GetRootComponent());
 }
 
 
@@ -111,5 +117,16 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
 		UGameplayStatics::PlaySoundAtLocation(this, HitSound, ImpactPoint);
 		UGameplayStatics::SpawnEmitterAtLocation(this, HitParticle, ImpactPoint);
 	}
+}
+
+float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	if (AttributeComponent && HealthBarWidgetClass)
+	{
+		AttributeComponent->ReceiveDamage(DamageAmount);
+		HealthBarWidgetClass->SetProgressBarPercent(AttributeComponent->GetHealthPercentage());
+	}
+	return DamageAmount;
 }
 

@@ -8,6 +8,9 @@
 #include "Enemy.generated.h"
 
 class UAnimMontage;
+class UAttributeComponent;
+class UHealthBarComponent;
+
 UCLASS()
 class DEVAKIVILLAGE_API AEnemy : public ACharacter, public IHitInterface
 {
@@ -24,6 +27,8 @@ public:
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
 
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
 private:
 
 	/*
@@ -39,6 +44,12 @@ private:
 	UPROPERTY(EditAnywhere, Category="Particle Effects")
 	UParticleSystem* HitParticle;
 
+	UPROPERTY(VisibleAnywhere)
+	UAttributeComponent* AttributeComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	UHealthBarComponent* HealthBarWidgetClass;
+
 protected:
 
 	/*
@@ -48,8 +59,7 @@ protected:
 	void PlayHitReactMontage(const FName& SectionName);
 	
 	virtual void BeginPlay() override;
-
-public:	
+	
 	
 
 };

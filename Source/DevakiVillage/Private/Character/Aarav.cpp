@@ -185,7 +185,7 @@ void AAarav::Interact()
 
 	if (OverlappedWeapon)
 	{
-		OverlappedWeapon->Equip(GetMesh(), FName("RightHandSocket"));
+		OverlappedWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
 		CharacterState = ECharacterState::ECS_OneHandWeaponEquipped;
 		OverlappedItem = nullptr;
 		EquippedWeapon = OverlappedWeapon;

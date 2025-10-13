@@ -1,11 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Public/Items/Item.h"
+#include "Items/Item.h"
 
 #include "Character/Aarav.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "NiagaraComponent.h"
 
 // Sets default values
 AItem::AItem()
@@ -18,6 +19,9 @@ AItem::AItem()
 
 	ItemSphere = CreateDefaultSubobject<USphereComponent>("ItemSphere");
 	ItemSphere->SetupAttachment(ItemMesh);
+
+	EmbersParticleComponent = CreateDefaultSubobject<UNiagaraComponent>("Niagra Component");
+	EmbersParticleComponent->SetupAttachment(GetRootComponent());
 
 }
 

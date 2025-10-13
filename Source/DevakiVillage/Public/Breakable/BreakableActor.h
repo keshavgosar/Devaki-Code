@@ -23,8 +23,7 @@ public:
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<class ATreasure> TreasureClass;
+	
 
 protected:
 	
@@ -33,11 +32,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UCapsuleComponent* CollisionCapsule;
 
+	UPROPERTY(EditAnywhere, Category="Treasure Classes")
+	TArray<TSubclassOf<class ATreasure>> TreasureClasses;
+
 private:
 
 	UPROPERTY(EditAnywhere)
 	UGeometryCollectionComponent* GeometryCollection;
 
-	
+	bool bBreakable = false;
 
 };

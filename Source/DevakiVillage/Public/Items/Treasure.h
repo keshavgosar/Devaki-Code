@@ -21,5 +21,7 @@ public:
 private:
 	UPROPERTY(EditAnywhere, Category="Treasure Sound")
 	USoundBase* TreasurePickSound;
-	
+
+	UPROPERTY(EditAnywhere, Category="Gold Amount")
+	int32 GoldAmount;
 };

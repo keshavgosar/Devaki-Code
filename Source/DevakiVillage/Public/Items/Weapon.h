@@ -22,12 +22,13 @@ public:
 	AWeapon();
 	
 	void AttachToSocket(USceneComponent* InParent, const FName& InSocketName);
-	void Equip(USceneComponent* InParent, FName InSocketName);
+	void Equip(USceneComponent* InParent, FName InSocketName, AActor* NewOwner, APawn* NewInstigator);
 
 	virtual void BeginPlay() override;
 
 	UPROPERTY()
 	TArray<AActor*> IgnoreActors;
+
 
 protected:
 	
@@ -53,6 +54,9 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = "Sounds | Weapon Equip Sound")
 	USoundBase* EquipSound;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	float Damage = 20.f;
 
 public:
 
