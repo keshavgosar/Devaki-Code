@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Character/CharacterTypes.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/HitInterface.h"
 #include "Enemy.generated.h"
@@ -38,6 +39,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
 	UAnimMontage* HitReactMontage;
 
+	UPROPERTY(EditAnywhere, Category = "Anim Montages | Death Montage")
+	UAnimMontage* DeathMontage;
+
 	UPROPERTY(EditAnywhere, Category=Sounds)
 	USoundBase* HitSound;
 
@@ -50,8 +54,19 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UHealthBarComponent* HealthBarWidgetClass;
 
+	UPROPERTY()
+	AActor* CombatTarget;
+
+	UPROPERTY(EditAnywhere)
+	double CombatRadius = 500.f;
+
 protected:
 
+	void Die();
+
+	UPROPERTY(BlueprintReadOnly)
+	EDeathPose DeathPose = EDeathPose::EDP_Alive;
+	
 	/*
 	 * Play Montage Functions
 	 */
