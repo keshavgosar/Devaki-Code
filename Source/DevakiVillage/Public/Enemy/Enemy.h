@@ -11,6 +11,7 @@
 class UAnimMontage;
 class UAttributeComponent;
 class UHealthBarComponent;
+class AAIController;
 
 UCLASS()
 class DEVAKIVILLAGE_API AEnemy : public ACharacter, public IHitInterface
@@ -56,6 +57,20 @@ private:
 
 	UPROPERTY()
 	AActor* CombatTarget;
+
+	/*
+	 * Navigation
+	 */
+
+	UPROPERTY()
+	AAIController* EnemyController;
+
+	//Current Target
+	UPROPERTY(EditInstanceOnly, Category = "AI Navigations")
+	AActor* PatrolTarget;
+	
+	UPROPERTY(EditAnywhere, Category = "AI Navigations")
+	TArray<AActor*> PatrolTargets;
 
 	UPROPERTY(EditAnywhere)
 	double CombatRadius = 500.f;

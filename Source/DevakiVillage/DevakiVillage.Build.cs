@@ -8,7 +8,7 @@ public class DevakiVillage : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" , "GeometryCollectionEngine", "Niagara" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" , "GeometryCollectionEngine", "Niagara", "AIModule" });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"DevakiVillage",
