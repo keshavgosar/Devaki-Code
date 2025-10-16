@@ -42,6 +42,8 @@ void AAarav::BeginPlay()
 {
 	Super::BeginPlay();
 
+	Tags.Add(FName("AaravCharacter"));
+
 	if (GetMesh())
 	{
 		GetMesh()->HideBoneByName(TEXT("sword_bottom"), EPhysBodyOp::PBO_None);
