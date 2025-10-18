@@ -87,15 +87,6 @@ void AAarav::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-void AAarav::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
-{
-	if (EquippedWeapon && EquippedWeapon->GetBoxComponent())
-	{
-		EquippedWeapon->GetBoxComponent()->SetCollisionEnabled(CollisionEnabled);
-		EquippedWeapon->IgnoreActors.Empty();
-	}
-}
-
 
 void AAarav::Move(const FInputActionValue& Value)
 {
@@ -143,9 +134,8 @@ void AAarav::SprintCompleted(const FInputActionValue& Value)
 
 void AAarav::Attack(const FInputActionValue& Value)
 {
-	const bool bCanAttack = ActionState == EActionState::EAS_Unoccupied && CharacterState != ECharacterState::ECS_Unequipped;
 	
-	if (bCanAttack)
+	if (CanAttack())
 	{
 		PlayAttackMontage();
 		ActionState = EActionState::EAS_Attacking;
@@ -272,6 +262,12 @@ void AAarav::PlayEquipMontage(const FName& SectionName)
 		AnimInstance->Montage_JumpToSection(SectionName, EquipMontage);
 	}
 }
+
+bool AAarav::CanAttack()
+{
+	return ActionState == EActionState::EAS_Unoccupied && CharacterState != ECharacterState::ECS_Unequipped;
+}
+
 
 bool AAarav::CanDisarm()
 {

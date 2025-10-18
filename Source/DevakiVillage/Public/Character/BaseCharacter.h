@@ -1,0 +1,76 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Character.h"
+#include "Interfaces/HitInterface.h"
+#include "BaseCharacter.generated.h"
+
+class AWeapon;
+class UAttributeComponent;
+
+UCLASS()
+class DEVAKIVILLAGE_API ABaseCharacter : public ACharacter, public IHitInterface
+{
+	GENERATED_BODY()
+
+public:
+	ABaseCharacter();
+	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
+
+protected:
+	virtual void BeginPlay() override;
+
+	virtual void Attack();
+
+	virtual void Die();
+
+	/*
+	 * Play Montage Functions
+	 */
+	virtual void PlayAttackMontage();
+
+	void PlayHitReactMontage(const FName& SectionName);
+
+	void DirectionalHitReact(const FVector& ImpactPoint);
+
+	virtual bool CanAttack();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void AttackEnd();
+
+	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	AWeapon* EquippedWeapon;
+	
+	/*
+	 * Play Montages Variables
+	 */
+	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
+	UAnimMontage* AaravAttackMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
+	UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Anim Montages | Death Montage")
+	UAnimMontage* DeathMontage;
+
+	/*
+	 * Components
+	 */
+	UPROPERTY(VisibleAnywhere)
+	UAttributeComponent* AttributeComponent;
+
+	/*
+	 * Sound and Effects
+	 */
+	UPROPERTY(EditAnywhere, Category=Sounds)
+	USoundBase* HitSound;
+
+	UPROPERTY(EditAnywhere, Category="Particle Effects")
+	UParticleSystem* HitParticle;
+
+};

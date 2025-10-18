@@ -4,21 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "Character/BaseCharacter.h"
 #include "Character/CharacterTypes.h"
-#include "GameFramework/Character.h"
-#include "Interfaces/HitInterface.h"
 #include "Enemy.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSeePawnDelegate, APawn*, Pawn);
 
 class UAnimMontage;
-class UAttributeComponent;
 class UHealthBarComponent;
 class AAIController;
 class UPawnSensingComponent;
 
 UCLASS()
-class DEVAKIVILLAGE_API AEnemy : public ACharacter, public IHitInterface
+class DEVAKIVILLAGE_API AEnemy : public ABaseCharacter
 {
 	GENERATED_BODY()
 
@@ -29,7 +27,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	void DirectionalHitReact(const FVector& ImpactPoint);
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
 
@@ -37,30 +34,12 @@ public:
 
 private:
 
-	/*
-	 * Animation Montages
-	 */
-	
-	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
-	UAnimMontage* HitReactMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Anim Montages | Death Montage")
-	UAnimMontage* DeathMontage;
-
-	UPROPERTY(EditAnywhere, Category=Sounds)
-	USoundBase* HitSound;
-
-	UPROPERTY(EditAnywhere, Category="Particle Effects")
-	UParticleSystem* HitParticle;
-
 	UPROPERTY()
 	AActor* CombatTarget;
 
 	/*
 	 * Components
 	 */
-	UPROPERTY(VisibleAnywhere)
-	UAttributeComponent* AttributeComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	UHealthBarComponent* HealthBarWidgetClass;
@@ -105,7 +84,7 @@ private:
 
 protected:
 
-	void Die();
+	virtual void Die() override;
 	bool InTargetRange(AActor* Target, double Radius);
 	void MoveToTarget(AActor* Target);
 	AActor* ChoosePatrolTarget();
@@ -120,7 +99,7 @@ protected:
 	 * Play Montage Functions
 	 */
 
-	void PlayHitReactMontage(const FName& SectionName);
+	
 	
 	virtual void BeginPlay() override;
 	void CheckCombatTarget();

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "BaseCharacter.h"
 #include "InputActionValue.h"
 #include "Character/CharacterTypes.h"
 #include "Aarav.generated.h"
@@ -13,29 +13,21 @@ class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 class AItem;
-class AWeapon;
-
 
 UCLASS()
-class DEVAKIVILLAGE_API AAarav : public ACharacter
+class DEVAKIVILLAGE_API AAarav : public ABaseCharacter
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	AAarav();
-
-	// Called when the game starts or when spawned
+	
 	virtual void BeginPlay() override;
 	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
+	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UFUNCTION(BlueprintCallable)
-	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
 
 protected:
 
@@ -43,9 +35,8 @@ protected:
 	
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EActionState ActionState = EActionState::EAS_Unoccupied;
-
-	UFUNCTION(BlueprintCallable)
-	void AttackEnd();
+	
+	virtual void AttackEnd() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	USpringArmComponent* CameraBoom;
@@ -74,21 +65,20 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* AaravMappingContext;
 
-	UPROPERTY(VisibleAnywhere, Category = "Weapon")
-	AWeapon* EquippedWeapon;
-
 	/*
 	 * Animation Montages
 	 */
-	
-	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
-	UAnimMontage* AaravAttackMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
 	UAnimMontage* EquipMontage;
 
-	void PlayAttackMontage();
+	/*
+	 * Play Attack Montage
+	 */
+	virtual void PlayAttackMontage() override;
 	void PlayEquipMontage(const FName& SectionName);
+
+	virtual bool CanAttack() override;
 
 	bool CanDisarm();
 	bool CanArm();
