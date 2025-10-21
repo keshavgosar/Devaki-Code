@@ -27,6 +27,12 @@ AAarav::AAarav()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
+	GetMesh()->SetCollisionObjectType(ECC_WorldDynamic);
+	GetMesh()->SetCollisionResponseToAllChannels(ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	GetMesh()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	GetMesh()->SetGenerateOverlapEvents(true);
+
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->bUsePawnControlRotation = true;
@@ -85,6 +91,14 @@ void AAarav::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInput->BindAction(AttackAction, ETriggerEvent::Triggered, this , &AAarav::Attack);
 	}
 
+}
+
+void AAarav::GetHit_Implementation(const FVector& ImpactPoint)
+{
+	Super::GetHit_Implementation(ImpactPoint);
+
+	PlayHitSound(ImpactPoint);
+	SpawnHitParticle(ImpactPoint);
 }
 
 
@@ -177,26 +191,27 @@ void AAarav::Interact()
 
 	if (OverlappedWeapon)
 	{
-		OverlappedWeapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
-		CharacterState = ECharacterState::ECS_OneHandWeaponEquipped;
-		OverlappedItem = nullptr;
-		EquippedWeapon = OverlappedWeapon;
+		EquipWeapon(OverlappedWeapon);
 	}
 	else
 	{
 		if(CanDisarm())
 		{
-			PlayEquipMontage(FName("Unequip"));
-			CharacterState = ECharacterState::ECS_Unequipped;
-			ActionState = EActionState::EAS_EquippingWeapon;
+			Disarm();
 		}
 		else if(CanArm())
 		{
-			PlayEquipMontage(FName("Equip"));
-			CharacterState = ECharacterState::ECS_OneHandWeaponEquipped;
-			ActionState = EActionState::EAS_EquippingWeapon;
+			Arm();
 		}
 	}
+}
+
+void AAarav::EquipWeapon(AWeapon* Weapon)
+{
+	Weapon->Equip(GetMesh(), FName("RightHandSocket"), this, this);
+	CharacterState = ECharacterState::ECS_OneHandWeaponEquipped;
+	OverlappedItem = nullptr;
+	EquippedWeapon = Weapon;
 }
 
 void AAarav::AddItem(FName ItemId)
@@ -216,41 +231,6 @@ void AAarav::RemoveItem(FName ItemId)
 	UE_LOG(LogTemp, Warning, TEXT("Item Removed: %s"), *ItemId.ToString());
 }
 
-void AAarav::PlayAttackMontage()
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	
-	if (AnimInstance && AaravAttackMontage)
-	{
-		AnimInstance->Montage_Play(AaravAttackMontage);
-
-		int32 AttackVal = FMath::RandRange(0, 2);
-		FName SectionName = FName();
-
-		switch (AttackVal)
-		{
-			
-		case 0:
-			SectionName = "Attack1";
-			break;
-
-		case 1:
-			SectionName = "Attack2";
-			break;
-
-		case 2:
-			SectionName = "Attack3";
-			break;
-
-		default:
-			break;
-			
-		}
-
-		AnimInstance->Montage_JumpToSection(SectionName);
-			
-	}
-}
 
 void AAarav::PlayEquipMontage(const FName& SectionName)
 {
@@ -281,12 +261,27 @@ bool AAarav::CanArm()
 
 void AAarav::Disarm()
 {
+	PlayEquipMontage(FName("Unequip"));
+	CharacterState = ECharacterState::ECS_Unequipped;
+	ActionState = EActionState::EAS_EquippingWeapon;
+}
+
+void AAarav::Arm()
+{
+	PlayEquipMontage(FName("Equip"));
+	CharacterState = ECharacterState::ECS_OneHandWeaponEquipped;
+	ActionState = EActionState::EAS_EquippingWeapon;
+}
+
+void AAarav::AttachWeaponToBack()
+{
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->AttachToSocket(GetMesh(), FName("SpineSocket"));
 	}
 }
-void AAarav::Arm()
+
+void AAarav::AttachWeaponToHand()
 {
 	if (EquippedWeapon)
 	{

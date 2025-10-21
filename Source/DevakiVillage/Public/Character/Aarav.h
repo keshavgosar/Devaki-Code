@@ -28,6 +28,8 @@ public:
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
+
 
 protected:
 
@@ -75,19 +77,20 @@ protected:
 	/*
 	 * Play Attack Montage
 	 */
-	virtual void PlayAttackMontage() override;
 	void PlayEquipMontage(const FName& SectionName);
 
 	virtual bool CanAttack() override;
 
 	bool CanDisarm();
 	bool CanArm();
+	void Disarm();
+	void Arm();
 
 	UFUNCTION(BlueprintCallable)
-	void Arm();
+	void AttachWeaponToHand();
 	
 	UFUNCTION(BlueprintCallable)
-	void Disarm();
+	void AttachWeaponToBack();
 
 	UFUNCTION(BlueprintCallable)
 	void FinishEquipping();
@@ -106,6 +109,8 @@ protected:
 
 	void PerformInteractionTrace();
 	void Interact();
+
+	void EquipWeapon(AWeapon* Weapon);
 
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappedItem;

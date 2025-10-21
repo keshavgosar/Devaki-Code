@@ -19,44 +19,38 @@ public:
 	ABaseCharacter();
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION(BlueprintCallable)
-	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
+	
 
 protected:
-	virtual void BeginPlay() override;
 
-	virtual void Attack();
-
-	virtual void Die();
-
-	/*
-	 * Play Montage Functions
-	 */
-	virtual void PlayAttackMontage();
-
-	void PlayHitReactMontage(const FName& SectionName);
-
-	void DirectionalHitReact(const FVector& ImpactPoint);
-
-	virtual bool CanAttack();
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void AttackEnd();
 
+	virtual void BeginPlay() override;
+
+	virtual void Attack();
+	virtual void Die();
+	void DirectionalHitReact(const FVector& ImpactPoint);
+	void PlayHitSound(const FVector& ImpactPoint);
+	void SpawnHitParticle(const FVector& ImpactPoint);
+	virtual bool CanAttack();
+	bool IsAlive();
+	virtual void HandleDamage(float DamageAmount);
+	void DisableCapsule();
+
+	/*
+	 * Play Montage Functions
+	 */
+	
+	virtual int32 PlayAttackMontage();
+	virtual int32 PlayDeathMontage();
+	void PlayHitReactMontage(const FName& SectionName);
+
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
 	AWeapon* EquippedWeapon;
-	
-	/*
-	 * Play Montages Variables
-	 */
-	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
-	UAnimMontage* AaravAttackMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
-	UAnimMontage* HitReactMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Anim Montages | Death Montage")
-	UAnimMontage* DeathMontage;
 
 	/*
 	 * Components
@@ -64,6 +58,10 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UAttributeComponent* AttributeComponent;
 
+private:
+
+	void PlayMontageSection(UAnimMontage* Montage, const FName& SectionName);
+	int32 PlayRandomMontageSection(UAnimMontage* Montage, const TArray<FName>& SectionNames);
 	/*
 	 * Sound and Effects
 	 */
@@ -72,5 +70,23 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="Particle Effects")
 	UParticleSystem* HitParticle;
+
+	/*
+	 * Play Montages Variables
+	 */
+	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
+	UAnimMontage* AttackMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Anim Montages | Attack Montage")
+	UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Anim Montages | Death Montage")
+	UAnimMontage* DeathMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TArray<FName> AttackMontageSections;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TArray<FName> DeathMontageSections;
 
 };

@@ -21,21 +21,102 @@ class DEVAKIVILLAGE_API AEnemy : public ABaseCharacter
 	GENERATED_BODY()
 
 public:
-	
 	AEnemy();
 
 	virtual void Tick(float DeltaTime) override;
-	
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
-private:
+protected:
+	/*
+	 * Weapon Properties
+	 */
 
-	UPROPERTY()
-	AActor* CombatTarget;
+	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
+	USceneComponent* BoxTraceStart1;
+
+	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
+	USceneComponent* BoxTraceEnd1;
+
+	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
+	USceneComponent* BoxTraceStart2;
+
+	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
+	USceneComponent* BoxTraceEnd2;
+
+	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
+	class UBoxComponent* WeaponBox1;
+
+	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
+	UBoxComponent* WeaponBox2;
+
+	UFUNCTION()
+	void OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	//Enemy State
+	UPROPERTY(BlueprintReadOnly)
+	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
+
+	virtual void Die() override;
+	bool InTargetRange(AActor* Target, double Radius);
+	void MoveToTarget(AActor* Target);
+	AActor* ChoosePatrolTarget();
+
+	UFUNCTION()
+	void OnPawnSeen(APawn* SeenPawn);
+
+	UPROPERTY(BlueprintReadOnly)
+	TEnumAsByte<EDeathPose> DeathPose;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float DeathLifeSpan = 1.f;
+	
+	/*
+	 * Play Montage Functions
+	 */
+	virtual void Attack() override;
+	virtual int32 PlayDeathMontage() override;
+	virtual bool CanAttack() override;
+	virtual void AttackEnd() override;
+	
+	virtual void BeginPlay() override;
+	
+
+	virtual void HandleDamage(float DamageAmount) override;
+
+	UFUNCTION(BlueprintCallable)
+	void EnemyWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
+	
+private:
+	void InitializeEnemy();
+	/*
+	 * AI Behaviour Functions
+	 */
+	void CheckCombatTarget();
+	void CheckPatrolTarget();
+	void PatrolTimerFinished();
+	void ShowHealthBar();
+	void HideHealthBar();
+	void LooseInterest();
+	void StartPatrolling();
+	void ChaseTarget();
+	bool IsOutsideCombatRadius();
+	bool IsOutsideAttackRadius();
+	bool IsChasing();
+	bool IsInsideAttackRadius();
+	bool IsAttacking();
+	bool IsDead();
+	bool IsEngaged();
+
+	void ClearPatrolTimer();
+
+	/*
+	 * Combat
+	 */
+	void StartAttackTimer();
+	void ClearAttackTimer();
 
 	/*
 	 * Components
@@ -46,6 +127,15 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UPawnSensingComponent* PawnSensingComponent;
+
+	UPROPERTY()
+	AActor* CombatTarget;
+
+	UPROPERTY(EditAnywhere)
+	double CombatRadius = 500.f;
+
+	UPROPERTY(EditAnywhere)
+	double AttackRadius = 150.f;
 
 	/*
 	 * Navigation
@@ -64,44 +154,26 @@ private:
 	UPROPERTY(EditAnywhere)
 	double PatrolRadius = 200.f;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float PatrollingSpeed = 150.f;
+
 	FTimerHandle PatrolTimerHandle;
-	void PatrolTimerFinished();
-
-	UPROPERTY(EditAnywhere)
-	double CombatRadius = 500.f;
-
-	UPROPERTY(EditAnywhere)
-	double AttackRadius = 150.f;
-
+	
 	UPROPERTY(EditAnywhere, Category= "AI Navigations || Wait Time")
 	float WaitTimeMin = 5.f;
 	
 	UPROPERTY(EditAnywhere, Category= "AI Navigations || Wait Time")
 	float WaitTimeMax = 10.f;
 
-	//Enemy State
-	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
-
-protected:
-
-	virtual void Die() override;
-	bool InTargetRange(AActor* Target, double Radius);
-	void MoveToTarget(AActor* Target);
-	AActor* ChoosePatrolTarget();
-
-	UFUNCTION()
-	void OnPawnSeen(APawn* SeenPawn);
-
-	UPROPERTY(BlueprintReadOnly)
-	EDeathPose DeathPose = EDeathPose::EDP_Alive;
+	FTimerHandle AttackTimerHandle;
 	
-	/*
-	 * Play Montage Functions
-	 */
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float AttackMinTime = 0.5f;
 
-	
-	
-	virtual void BeginPlay() override;
-	void CheckCombatTarget();
-	void CheckPatrolTarget();
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float AttackMaxTime = 1.5f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ChasingSpeed = 300.f;
+
 };
