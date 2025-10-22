@@ -26,6 +26,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
 
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor) override;
+
 	UFUNCTION(BlueprintCallable)
 	virtual void AttackEnd();
 

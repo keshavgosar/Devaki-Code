@@ -28,7 +28,7 @@ public:
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor) override;
 
 
 protected:
@@ -114,6 +114,9 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappedItem;
+
+	UFUNCTION(BlueprintCallable)
+	void HitReactEnd();
 
 public:
 

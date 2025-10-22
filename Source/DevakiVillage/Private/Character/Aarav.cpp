@@ -11,6 +11,7 @@
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "Components/BoxComponent.h"
+#include "Enemy/Enemy.h"
 #include "Items/Weapon.h"
 #include "Public/Interfaces/InteractableInterface.h"
 
@@ -93,12 +94,17 @@ void AAarav::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-void AAarav::GetHit_Implementation(const FVector& ImpactPoint)
+void AAarav::GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor)
 {
-	Super::GetHit_Implementation(ImpactPoint);
-
-	PlayHitSound(ImpactPoint);
-	SpawnHitParticle(ImpactPoint);
+	Super::GetHit_Implementation(ImpactPoint, HitActor);
+	
+	if (AEnemy* EnemyClass = Cast<AEnemy>(HitActor))
+	{
+		EnemyClass->EnemyWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	
+	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+	ActionState = EActionState::EAS_HitReaction;
 }
 
 
@@ -212,6 +218,11 @@ void AAarav::EquipWeapon(AWeapon* Weapon)
 	CharacterState = ECharacterState::ECS_OneHandWeaponEquipped;
 	OverlappedItem = nullptr;
 	EquippedWeapon = Weapon;
+}
+
+void AAarav::HitReactEnd()
+{
+	ActionState = EActionState::EAS_Unoccupied;
 }
 
 void AAarav::AddItem(FName ItemId)

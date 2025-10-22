@@ -73,7 +73,7 @@ void AWeapon::ExecuteGetHit(FHitResult BoxHit)
 	IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
 	if (HitInterface)
 	{
-		HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint);
+		HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint, GetOwner());
 	}
 }
 
@@ -85,18 +85,24 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 	if (BoxHit.GetActor())
 	{
-		// Applies the Damage
-		UGameplayStatics::ApplyDamage(
-			BoxHit.GetActor(),
-			Damage,
-			GetInstigator()->GetController(),
-			this,
-			UDamageType::StaticClass()
-			);
 		
-		ExecuteGetHit(BoxHit);
+		if (GetInstigator()->GetController())
+		{
+			AController* Controller = Cast<AController>(GetInstigator()->GetController());
+
+			// Applies the Damage
+			UGameplayStatics::ApplyDamage(
+				BoxHit.GetActor(),
+				Damage,
+				GetInstigator()->GetController(),
+				this,
+				UDamageType::StaticClass()
+				);
 		
-		CreateFields(BoxHit.ImpactPoint);
+			ExecuteGetHit(BoxHit);
+		
+			CreateFields(BoxHit.ImpactPoint);
+		}
 	}
 	
 }

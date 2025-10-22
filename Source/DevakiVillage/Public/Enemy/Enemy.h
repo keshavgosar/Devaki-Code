@@ -25,9 +25,13 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor) override;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	bool ActorIsSameType(AActor* OtherActor);
+
+	UFUNCTION(BlueprintCallable)
+	void EnemyWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
 
 protected:
 	/*
@@ -86,8 +90,7 @@ protected:
 
 	virtual void HandleDamage(float DamageAmount) override;
 
-	UFUNCTION(BlueprintCallable)
-	void EnemyWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
+	
 	
 private:
 	void InitializeEnemy();

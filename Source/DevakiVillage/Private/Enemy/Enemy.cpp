@@ -68,6 +68,8 @@ AEnemy::AEnemy()
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Tags.Add("Enemy");
 	
 	if (PawnSensingComponent)
 	{
@@ -104,21 +106,11 @@ void AEnemy::Tick(float DeltaTime)
 
 }
 
-void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
+void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor)
 {
-	ShowHealthBar();
-	
-	if (IsAlive())
-	{
-		DirectionalHitReact(ImpactPoint);
-	}
-	else
-	{
-		Die();
-	}
-
-	PlayHitSound(ImpactPoint);
-	SpawnHitParticle(ImpactPoint);
+	Super::GetHit_Implementation(ImpactPoint, HitActor);
+	if (!IsDead()) ShowHealthBar();
+	ClearPatrolTimer();
 }
 
 float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator,
@@ -130,9 +122,16 @@ float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEv
 	return DamageAmount;
 }
 
-void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-						  int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+bool AEnemy::ActorIsSameType(AActor* OtherActor)
 {
+	return GetOwner()->ActorHasTag(TEXT("Enemy")) && OtherActor->ActorHasTag(TEXT("Enemy"));
+}
+
+void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+                          int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (ActorIsSameType(OtherActor)) return;
+	
 	FVector StartLocationLeft = BoxTraceStart2->GetComponentLocation();
 	FVector EndLocationLeft = BoxTraceEnd2->GetComponentLocation();
 
@@ -173,6 +172,8 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 	if (BoxHitResultLeft.GetActor())
 	{
 		// Applies the Damage
+		if (ActorIsSameType(BoxHitResultLeft.GetActor())) return;
+		
 		UGameplayStatics::ApplyDamage(
 			BoxHitResultLeft.GetActor(),
 			10.f,
@@ -184,7 +185,7 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 		IHitInterface* HitInterface = Cast<IHitInterface>(BoxHitResultLeft.GetActor());
 		if (HitInterface)
 		{
-			HitInterface->Execute_GetHit(BoxHitResultLeft.GetActor(), BoxHitResultLeft.ImpactPoint);
+			HitInterface->Execute_GetHit(BoxHitResultLeft.GetActor(), BoxHitResultLeft.ImpactPoint, GetOwner());
 		}
 		
 		//CreateFields(BoxHit.ImpactPoint);
@@ -192,6 +193,7 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 
 	if (BoxHitResultRight.GetActor())
 	{
+		if (ActorIsSameType(BoxHitResultRight.GetActor())) return;
 		// Applies the Damage
 		UGameplayStatics::ApplyDamage(
 			BoxHitResultRight.GetActor(),
@@ -204,7 +206,7 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 		IHitInterface* HitInterface = Cast<IHitInterface>(BoxHitResultRight.GetActor());
 		if (HitInterface)
 		{
-			HitInterface->Execute_GetHit(BoxHitResultRight.GetActor(), BoxHitResultRight.ImpactPoint);
+			HitInterface->Execute_GetHit(BoxHitResultRight.GetActor(), BoxHitResultRight.ImpactPoint, GetOwner());
 		}
 		
 		//CreateFields(BoxHit.ImpactPoint);
@@ -220,6 +222,9 @@ void AEnemy::Die()
 	DisableCapsule();
 	SetLifeSpan(DeathLifeSpan);
 	GetCharacterMovement()->bOrientRotationToMovement = false;
+	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponBox1->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponBox2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 bool AEnemy::InTargetRange(AActor* Target, double Radius)

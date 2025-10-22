@@ -92,32 +92,50 @@ void ABaseCharacter::PlayHitReactMontage(const FName& SectionName)
 
 void ABaseCharacter::DirectionalHitReact(const FVector& ImpactPoint)
 {
-	//Get Forward Vector
-	const FVector ActorForwardVector = GetActorForwardVector();
+	// Validate mesh/anim/montage early
+	if (!GetMesh())
+	{
+		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("DirectionalHitReact: No Mesh"));
+		return;
+	}
+
+	if (!HitReactMontage)
+	{
+		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("DirectionalHitReact: HitReactMontage not set"));
+		return;
+	}
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (!AnimInstance)
+	{
+		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("DirectionalHitReact: No AnimInstance"));
+		return;
+	}
+
+	// Get forward vector and impact direction on XY plane
+	const FVector ActorForwardVector = GetActorForwardVector().GetSafeNormal();
 	const FVector ImpactPointLowered(ImpactPoint.X, ImpactPoint.Y, GetActorLocation().Z);
-	// Find To hit Vector
 	const FVector ToHit = (ImpactPointLowered - GetActorLocation()).GetSafeNormal();
 
-	//Dot Product of these two will return cos theta
-	const double CosTheta = FVector::DotProduct(ToHit, ActorForwardVector);
-	//We just need the angle so we do inverse of the angle to remove the cos
-	double Theta = FMath::Acos(CosTheta);
-	//the angle is in radiant so we convert it to degrees.
-	Theta = FMath::RadiansToDegrees(Theta);
+	// Dot product -> cos(theta). Clamp to avoid NaN from Acos.
+	float CosTheta = FVector::DotProduct(ToHit, ActorForwardVector);
+	CosTheta = FMath::Clamp(CosTheta, -1.0f, 1.0f);
 
-	//find cross product to get the negative angle so that we can determine if the hit is from left or the right
+	float Theta = FMath::RadiansToDegrees(FMath::Acos(CosTheta));
+
+	// Determine sign using cross product Z
 	const FVector CrossProduct = FVector::CrossProduct(ActorForwardVector, ToHit);
-	if (CrossProduct.Z < 0)
+	if (CrossProduct.Z < 0.0f)
 	{
-		Theta *= -1.f;
+		Theta = -Theta;
 	}
 
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Green, FString::Printf(TEXT("Theta: %f"), Theta));
+		GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, FString::Printf(TEXT("DirectionalHitReact Theta: %f"), Theta));
 	}
 
-	FName Section("FromBack");
+	FName Section = FName("FromBack");
 
 	if (Theta >= -45.0f && Theta < 45.0f)
 	{
@@ -129,7 +147,7 @@ void ABaseCharacter::DirectionalHitReact(const FVector& ImpactPoint)
 	}
 	else if (Theta >= 45.0f && Theta < 135.0f)
 	{
-		Section = FName("FromRight");	
+		Section = FName("FromRight");
 	}
 
 	PlayHitReactMontage(Section);
@@ -173,6 +191,21 @@ void ABaseCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type Collision
 		EquippedWeapon->GetBoxComponent()->SetCollisionEnabled(CollisionEnabled);
 		EquippedWeapon->IgnoreActors.Empty();
 	}
+}
+
+void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor)
+{
+	if (IsAlive() && HitActor)
+	{
+		DirectionalHitReact(HitActor->GetActorLocation());
+	}
+	else
+	{
+		Die();
+	}
+
+	PlayHitSound(ImpactPoint);
+	SpawnHitParticle(ImpactPoint);
 }
 
 
