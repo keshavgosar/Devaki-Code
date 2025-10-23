@@ -90,8 +90,6 @@ protected:
 
 	virtual void HandleDamage(float DamageAmount) override;
 
-	
-	
 private:
 	void InitializeEnemy();
 	/*
@@ -130,9 +128,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UPawnSensingComponent* PawnSensingComponent;
-
-	UPROPERTY()
-	AActor* CombatTarget;
 
 	UPROPERTY(EditAnywhere)
 	double CombatRadius = 500.f;
