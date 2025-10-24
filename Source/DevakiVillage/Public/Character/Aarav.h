@@ -13,6 +13,7 @@ class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 class AItem;
+class UMainOverlay;
 
 UCLASS()
 class DEVAKIVILLAGE_API AAarav : public ABaseCharacter
@@ -21,7 +22,8 @@ class DEVAKIVILLAGE_API AAarav : public ABaseCharacter
 
 public:
 	AAarav();
-	
+	void InitializeMainOverlayWidget();
+
 	virtual void BeginPlay() override;
 	
 	virtual void Tick(float DeltaTime) override;
@@ -30,6 +32,7 @@ public:
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor) override;
 
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 protected:
 
@@ -114,6 +117,9 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappedItem;
+
+	UPROPERTY()
+	UMainOverlay* MainOverlay;
 
 	UFUNCTION(BlueprintCallable)
 	void HitReactEnd();

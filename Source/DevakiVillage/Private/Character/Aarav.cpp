@@ -10,8 +10,11 @@
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
+#include "Component/AttributeComponent.h"
 #include "Components/BoxComponent.h"
 #include "Enemy/Enemy.h"
+#include "HUD/GameplayMainHUD.h"
+#include "HUD/MainOverlay.h"
 #include "Items/Weapon.h"
 #include "Public/Interfaces/InteractableInterface.h"
 
@@ -44,6 +47,25 @@ AAarav::AAarav()
 
 }
 
+void AAarav::InitializeMainOverlayWidget()
+{
+	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	{
+		AGameplayMainHUD* MainHUD = Cast<AGameplayMainHUD>(PlayerController->GetHUD());
+		if (MainHUD)
+		{
+			MainOverlay = MainHUD->GetMainOverlay();
+			if (MainOverlay && AttributeComponent)
+			{
+				MainOverlay->SetHealthBarPercent(AttributeComponent->GetHealthPercentage());
+				MainOverlay->SetStaminaBarPercent(1.f);
+				MainOverlay->SetGold(0);
+				MainOverlay->SetSouls(0);
+			}
+		}
+	}
+}
+
 // Called when the game starts or when spawned
 void AAarav::BeginPlay()
 {
@@ -64,6 +86,8 @@ void AAarav::BeginPlay()
 			Subsystem->AddMappingContext(AaravMappingContext, 0);
 		}
 	}
+
+	InitializeMainOverlayWidget();
 	
 }
 
@@ -105,6 +129,13 @@ void AAarav::GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor)
 	
 	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
 	ActionState = EActionState::EAS_HitReaction;
+}
+
+float AAarav::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	HandleDamage(DamageAmount);
+	return DamageAmount;
 }
 
 
