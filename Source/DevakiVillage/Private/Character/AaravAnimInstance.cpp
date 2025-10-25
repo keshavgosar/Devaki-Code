@@ -28,6 +28,8 @@ void UAaravAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		IsSprinting = GroundSpeed > 300.f;
 
 		CharacterState = AaravCharacter->GetCharacterState();
+		ActionState = AaravCharacter->GetActionState();
+		DeathPose = AaravCharacter->GetDeathPose();
 
 	}
 }

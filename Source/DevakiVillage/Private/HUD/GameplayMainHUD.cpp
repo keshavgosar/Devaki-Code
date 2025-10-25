@@ -10,6 +10,13 @@ void AGameplayMainHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
+	
+}
+
+void AGameplayMainHUD::PreInitializeComponents()
+{
+	Super::PreInitializeComponents();
+
 	if (UWorld* World = GetWorld())
 	{
 		APlayerController* PC = World->GetFirstPlayerController();

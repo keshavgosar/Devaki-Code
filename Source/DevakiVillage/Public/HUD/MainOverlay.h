@@ -15,7 +15,6 @@ class DEVAKIVILLAGE_API UMainOverlay : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-		void NativeConstruct() override;
 
 	void SetHealthBarPercent(float Percent);
 	void SetStaminaBarPercent(float Percent);

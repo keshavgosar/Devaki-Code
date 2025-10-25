@@ -71,9 +71,6 @@ protected:
 	UFUNCTION()
 	void OnPawnSeen(APawn* SeenPawn);
 
-	UPROPERTY(BlueprintReadOnly)
-	TEnumAsByte<EDeathPose> DeathPose;
-
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float DeathLifeSpan = 1.f;
 	
@@ -81,7 +78,6 @@ protected:
 	 * Play Montage Functions
 	 */
 	virtual void Attack() override;
-	virtual int32 PlayDeathMontage() override;
 	virtual bool CanAttack() override;
 	virtual void AttackEnd() override;
 	

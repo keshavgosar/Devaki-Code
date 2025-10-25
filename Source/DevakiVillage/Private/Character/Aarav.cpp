@@ -47,24 +47,7 @@ AAarav::AAarav()
 
 }
 
-void AAarav::InitializeMainOverlayWidget()
-{
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
-	{
-		AGameplayMainHUD* MainHUD = Cast<AGameplayMainHUD>(PlayerController->GetHUD());
-		if (MainHUD)
-		{
-			MainOverlay = MainHUD->GetMainOverlay();
-			if (MainOverlay && AttributeComponent)
-			{
-				MainOverlay->SetHealthBarPercent(AttributeComponent->GetHealthPercentage());
-				MainOverlay->SetStaminaBarPercent(1.f);
-				MainOverlay->SetGold(0);
-				MainOverlay->SetSouls(0);
-			}
-		}
-	}
-}
+
 
 // Called when the game starts or when spawned
 void AAarav::BeginPlay()
@@ -109,13 +92,21 @@ void AAarav::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	{
 		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAarav::Move);
 		EnhancedInput->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAarav::Look);
-		EnhancedInput->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::Jump);
+		EnhancedInput->BindAction(JumpAction, ETriggerEvent::Completed, this, &AAarav::Jump);
 		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Started, this, &AAarav::SprintStart);
 		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Completed, this, &AAarav::SprintCompleted);
 		EnhancedInput->BindAction(InteractionAction, ETriggerEvent::Triggered, this, &AAarav::Interact);
 		EnhancedInput->BindAction(AttackAction, ETriggerEvent::Triggered, this , &AAarav::Attack);
 	}
 
+}
+
+void AAarav::Jump()
+{
+	if (ActionState == EActionState::EAS_Unoccupied)
+	{
+		Super::Jump();
+	}
 }
 
 void AAarav::GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor)
@@ -128,13 +119,20 @@ void AAarav::GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor)
 	}
 	
 	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
-	ActionState = EActionState::EAS_HitReaction;
+
+	if (AttributeComponent && AttributeComponent->GetHealthPercentage() > 0.f)
+	{
+		ActionState = EActionState::EAS_HitReaction;
+	}
+	
 }
 
 float AAarav::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator,
-	AActor* DamageCauser)
+                         AActor* DamageCauser)
 {
 	HandleDamage(DamageAmount);
+
+	SetHUDHealth();
 	return DamageAmount;
 }
 
@@ -341,3 +339,37 @@ void AAarav::AttackEnd()
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
+void AAarav::InitializeMainOverlayWidget()
+{
+	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	{
+		AGameplayMainHUD* MainHUD = Cast<AGameplayMainHUD>(PlayerController->GetHUD());
+		if (MainHUD)
+		{
+			MainOverlay = MainHUD->GetMainOverlay();
+			if (MainOverlay && AttributeComponent)
+			{
+				MainOverlay->SetHealthBarPercent(AttributeComponent->GetHealthPercentage());
+				MainOverlay->SetStaminaBarPercent(1.f);
+				MainOverlay->SetGold(0);
+				MainOverlay->SetSouls(0);
+			}
+		}
+	}
+}
+
+void AAarav::SetHUDHealth()
+{
+	if (MainOverlay && AttributeComponent)
+	{
+		MainOverlay->SetHealthBarPercent(AttributeComponent->GetHealthPercentage());
+	}
+}
+
+void AAarav::Die()
+{
+	Super::Die();
+
+	ActionState = EActionState::EAS_Dead;
+	DisableMeshCollision();
+}

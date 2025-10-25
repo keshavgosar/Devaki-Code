@@ -22,13 +22,15 @@ class DEVAKIVILLAGE_API AAarav : public ABaseCharacter
 
 public:
 	AAarav();
-	void InitializeMainOverlayWidget();
 
 	virtual void BeginPlay() override;
 	
 	virtual void Tick(float DeltaTime) override;
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	//Jump Function
+	virtual void Jump() override;
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor) override;
 
@@ -115,6 +117,11 @@ protected:
 
 	void EquipWeapon(AWeapon* Weapon);
 
+	void InitializeMainOverlayWidget();
+	void SetHUDHealth();
+
+	virtual void Die() override;
+
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappedItem;
 
@@ -146,5 +153,7 @@ public:
 	FORCEINLINE void SetOverlappedItem(AItem* Item) { OverlappedItem = Item; }
 
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
+
+	FORCEINLINE EActionState GetActionState() const { return ActionState; }
 
 };

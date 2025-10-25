@@ -17,6 +17,8 @@ class DEVAKIVILLAGE_API AGameplayMainHUD : public AHUD
 public:
 	virtual void BeginPlay() override;
 
+	virtual void PreInitializeComponents() override;
+
 private:
 
 	UPROPERTY(EditAnywhere, Category = "Widgets")

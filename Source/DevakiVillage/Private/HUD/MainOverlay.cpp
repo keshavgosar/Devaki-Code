@@ -6,10 +6,6 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 
-void UMainOverlay::NativeConstruct()
-{
-	Super::NativeConstruct();
-}
 
 void UMainOverlay::SetHealthBarPercent(float Percent)
 {
@@ -41,6 +37,6 @@ void UMainOverlay::SetSouls(int32 SoulsAmount)
 	if (SoulsText)
 	{
 		FText SoulsTextValue = FText::FromString(FString::Printf(TEXT("%d"), SoulsAmount));
-		GoldText->SetText(SoulsTextValue);
+		SoulsText->SetText(SoulsTextValue);
 	}
 }

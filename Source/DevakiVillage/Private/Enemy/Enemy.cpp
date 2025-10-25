@@ -229,8 +229,8 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 
 void AEnemy::Die()
 {
+	Super::Die();
 	EnemyState = EEnemyState::EES_Dead;
-	PlayDeathMontage();
 	ClearAttackTimer();
 	HideHealthBar();
 	DisableCapsule();
@@ -262,6 +262,8 @@ void AEnemy::MoveToTarget(AActor* Target)
 
 void AEnemy::OnPawnSeen(APawn* SeenPawn)
 {
+	if (SeenPawn->ActorHasTag(FName("Dead"))) return;
+	
 	const bool bShouldChaseTarget =
 		EnemyState != EEnemyState::EES_Dead &&
 			EnemyState != EEnemyState::EES_Chasing &&
@@ -279,23 +281,13 @@ void AEnemy::OnPawnSeen(APawn* SeenPawn)
 
 void AEnemy::Attack()
 {
-	EnemyState = EEnemyState::EES_Engaged;
 	Super::Attack();
+	
+	if (CombatTarget == nullptr) return;
+	
+	EnemyState = EEnemyState::EES_Engaged;
 	PlayAttackMontage();
 	UE_LOG(LogTemp,Warning, TEXT("Enemy Attack Called"));
-}
-
-int32 AEnemy::PlayDeathMontage()
-{
-	const int32 Selection = Super::PlayDeathMontage();
-	TEnumAsByte<EDeathPose> Pose(Selection);
-
-	if (Pose < EDeathPose::EDP_Max)
-	{
-		DeathPose = Pose;
-	}
-
-	return Selection;
 }
 
 bool AEnemy::CanAttack()
@@ -502,13 +494,4 @@ AActor* AEnemy::ChoosePatrolTarget()
 	return nullptr;
 	
 }
-
-
-
-
-
-
-
-
-
 
