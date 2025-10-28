@@ -15,6 +15,8 @@
 #include "Enemy/Enemy.h"
 #include "HUD/GameplayMainHUD.h"
 #include "HUD/MainOverlay.h"
+#include "Items/Souls.h"
+#include "Items/Treasure.h"
 #include "Items/Weapon.h"
 #include "Public/Interfaces/InteractableInterface.h"
 
@@ -81,6 +83,12 @@ void AAarav::Tick(float DeltaTime)
 
 	PerformInteractionTrace();
 
+	if (AttributeComponent && MainOverlay)
+	{
+		AttributeComponent->RegenStamina(DeltaTime);
+		MainOverlay->SetStaminaBarPercent(AttributeComponent->GetStaminaPercentage());
+	}
+
 }
 
 // Called to bind functionality to input
@@ -97,6 +105,7 @@ void AAarav::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInput->BindAction(SprintAction, ETriggerEvent::Completed, this, &AAarav::SprintCompleted);
 		EnhancedInput->BindAction(InteractionAction, ETriggerEvent::Triggered, this, &AAarav::Interact);
 		EnhancedInput->BindAction(AttackAction, ETriggerEvent::Triggered, this , &AAarav::Attack);
+		EnhancedInput->BindAction(DodgeAction, ETriggerEvent::Triggered, this , &AAarav::Dodge);
 	}
 
 }
@@ -134,6 +143,29 @@ float AAarav::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEv
 
 	SetHUDHealth();
 	return DamageAmount;
+}
+
+void AAarav::SetOverlappingItem(class AItem* Item)
+{
+	OverlappedItem = Item;
+}
+
+void AAarav::AddSouls(class ASouls* Soul)
+{
+	if (AttributeComponent && Soul && MainOverlay)
+	{
+		AttributeComponent->AddSouls(Soul->GetSoulsAmount());
+		MainOverlay->SetSouls(AttributeComponent->GetSouls());
+	}
+}
+
+void AAarav::AddGold(class ATreasure* Treasure)
+{
+	if (AttributeComponent && Treasure && MainOverlay)
+	{
+		AttributeComponent->AddGold(Treasure->GetGoldAmount());
+		MainOverlay->SetGold(AttributeComponent->GetGold());
+	}
 }
 
 
@@ -189,6 +221,21 @@ void AAarav::Attack(const FInputActionValue& Value)
 		PlayAttackMontage();
 		ActionState = EActionState::EAS_Attacking;
 	}
+}
+
+void AAarav::Dodge(const FInputActionValue& Value)
+{
+	if (IsOccupied() || !HasEnoughStamina()) return;
+	
+	PlayDodgeMontage();
+	ActionState = EActionState::EAS_Dodge;
+
+	if (AttributeComponent && MainOverlay)
+	{
+		AttributeComponent->UseStamina(AttributeComponent->GetDodgeCost());
+		MainOverlay->SetStaminaBarPercent(AttributeComponent->GetStaminaPercentage());
+	}
+	
 }
 
 void AAarav::PerformInteractionTrace()
@@ -313,6 +360,20 @@ void AAarav::Arm()
 	ActionState = EActionState::EAS_EquippingWeapon;
 }
 
+bool AAarav::IsOccupied()
+{
+	return ActionState != EActionState::EAS_Unoccupied;
+}
+
+bool AAarav::HasEnoughStamina()
+{
+	if (AttributeComponent && AttributeComponent->GetStamina() > AttributeComponent->GetDodgeCost())
+	{
+		return true;
+	}
+	return false;
+}
+
 void AAarav::AttachWeaponToBack()
 {
 	if (EquippedWeapon)
@@ -336,6 +397,13 @@ void AAarav::FinishEquipping()
 
 void AAarav::AttackEnd()
 {
+	ActionState = EActionState::EAS_Unoccupied;
+}
+
+void AAarav::DodgeEnd()
+{
+	Super::DodgeEnd();
+
 	ActionState = EActionState::EAS_Unoccupied;
 }
 

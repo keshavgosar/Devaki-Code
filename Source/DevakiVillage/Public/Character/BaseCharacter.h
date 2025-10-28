@@ -32,6 +32,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	virtual void AttackEnd();
 
+	UFUNCTION(BlueprintCallable)
+	virtual void DodgeEnd();
+
 	virtual void BeginPlay() override;
 
 	virtual void Attack();
@@ -51,6 +54,7 @@ protected:
 	
 	virtual int32 PlayAttackMontage();
 	virtual int32 PlayDeathMontage();
+	virtual void PlayDodgeMontage();
 	void PlayHitReactMontage(const FName& SectionName);
 	void StopAttackMontage();
 
@@ -102,6 +106,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Anim Montages | Death Montage")
 	UAnimMontage* DeathMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Anim Montages | Death Montage")
+	UAnimMontage* DodgeMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TArray<FName> AttackMontageSections;

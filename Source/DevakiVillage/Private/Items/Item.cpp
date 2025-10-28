@@ -7,6 +7,8 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AItem::AItem()
@@ -20,8 +22,8 @@ AItem::AItem()
 	ItemSphere = CreateDefaultSubobject<USphereComponent>("ItemSphere");
 	ItemSphere->SetupAttachment(ItemMesh);
 
-	EmbersParticleComponent = CreateDefaultSubobject<UNiagaraComponent>("Niagra Component");
-	EmbersParticleComponent->SetupAttachment(GetRootComponent());
+	ItemEffect = CreateDefaultSubobject<UNiagaraComponent>("Niagra Component");
+	ItemEffect->SetupAttachment(GetRootComponent());
 
 }
 
@@ -33,6 +35,31 @@ void AItem::BeginPlay()
 	ItemSphere->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnSphereOverlap);
 	ItemSphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnSphereEndOverlap);
 	
+}
+
+void AItem::SpawnPickupSystem()
+{
+	if (PickupEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this,
+			PickupEffect,
+			GetActorLocation(),
+			GetActorRotation()
+			);
+	}
+}
+
+void AItem::SpawnPickupSound()
+{
+	if (PickupSound)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(
+		this,
+		PickupSound,
+		GetActorLocation()
+		);
+	}
 }
 
 // Called every frame
@@ -50,11 +77,11 @@ void AItem::Tick(float DeltaTime)
 void AItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
-	AAarav* AaravCharacter = Cast<AAarav>(OtherActor);
+	IPickupInterface* PickupInterface = Cast<IPickupInterface>(OtherActor);
 
-	if (AaravCharacter)
+	if (PickupInterface)
 	{
-		AaravCharacter->SetOverlappedItem(this);
+		PickupInterface->SetOverlappingItem(this);
 	}
 	
 }
@@ -62,11 +89,11 @@ void AItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	AAarav* AaravCharacter = Cast<AAarav>(OtherActor);
+	IPickupInterface* PickupInterface = Cast<IPickupInterface>(OtherActor);
 
-	if (AaravCharacter)
+	if (PickupInterface)
 	{
-		AaravCharacter->SetOverlappedItem(nullptr);
+		PickupInterface->SetOverlappingItem(nullptr);
 	}
 	
 }

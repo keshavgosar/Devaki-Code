@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HUD/HealthBarComponent.h"
+#include "Items/Souls.h"
 #include "Kismet/GameplayStatics.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "Perception/PawnSensingComponent.h"
@@ -227,6 +228,22 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 	}
 }
 
+void AEnemy::SpawnSouls()
+{
+	UWorld* World = GetWorld();
+	if (World && SoulsClass && AttributeComponent)
+	{
+		ASouls* SpawnedSoul = World->SpawnActor<ASouls>(SoulsClass, GetActorLocation(), GetActorRotation());
+		if (SpawnedSoul)
+		{
+			SpawnedSoul->SetSoul(AttributeComponent->GetSouls());
+			//SpawnedSoul->FinishSpawning(SpawnedSoul->GetTransform());
+		}
+		GetWorldTimerManager().ClearTimer(SpawnTimerHandle);
+	}
+	
+}
+
 void AEnemy::Die()
 {
 	Super::Die();
@@ -239,6 +256,9 @@ void AEnemy::Die()
 	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponBox1->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponBox2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &AEnemy::SpawnSouls, 0.5f);
 }
 
 bool AEnemy::InTargetRange(AActor* Target, double Radius)
@@ -256,7 +276,7 @@ void AEnemy::MoveToTarget(AActor* Target)
 
 	FAIMoveRequest MoveRequest;
 	MoveRequest.SetGoalActor(Target);
-	MoveRequest.SetAcceptanceRadius(45.f);
+	MoveRequest.SetAcceptanceRadius(75.f);
 	EnemyController->MoveTo(MoveRequest);
 }
 

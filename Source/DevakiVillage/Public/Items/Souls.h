@@ -4,25 +4,24 @@
 
 #include "CoreMinimal.h"
 #include "Items/Item.h"
-#include "Treasure.generated.h"
+#include "Souls.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class DEVAKIVILLAGE_API ATreasure : public AItem
+class DEVAKIVILLAGE_API ASouls : public AItem
 {
 	GENERATED_BODY()
 
-public:
-	
+protected:
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 private:
-
-	UPROPERTY(EditAnywhere, Category="Gold Amount")
-	int32 GoldAmount;
+	UPROPERTY(EditAnywhere, Category="Souls Properties")
+	int32 SoulsAmount;
 
 public:
-	FORCEINLINE int32 GetGoldAmount() const { return GoldAmount; }
+	FORCEINLINE int32 GetSoulsAmount() const { return SoulsAmount; }
+	FORCEINLINE void SetSoul(int32 NewSoulsAmount) {SoulsAmount = NewSoulsAmount;};
 };

@@ -35,6 +35,15 @@ protected:
 
 	EItemState ItemState = EItemState::EIS_Hovering;
 
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* PickupEffect;
+
+	UPROPERTY(EditAnywhere)
+	class USoundBase* PickupSound;
+
+	virtual void SpawnPickupSystem();
+	virtual void SpawnPickupSound();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -46,5 +55,5 @@ public:
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UNiagaraComponent* EmbersParticleComponent;
+	UNiagaraComponent* ItemEffect;
 };

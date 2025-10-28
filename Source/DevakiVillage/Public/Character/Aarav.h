@@ -6,6 +6,7 @@
 #include "BaseCharacter.h"
 #include "InputActionValue.h"
 #include "Character/CharacterTypes.h"
+#include "Interfaces/PickupInterface.h"
 #include "Aarav.generated.h"
 
 class USpringArmComponent;
@@ -16,7 +17,7 @@ class AItem;
 class UMainOverlay;
 
 UCLASS()
-class DEVAKIVILLAGE_API AAarav : public ABaseCharacter
+class DEVAKIVILLAGE_API AAarav : public ABaseCharacter, public IPickupInterface
 {
 	GENERATED_BODY()
 
@@ -36,6 +37,10 @@ public:
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	virtual void SetOverlappingItem(class AItem* Item) override;
+	virtual void AddSouls(class ASouls* Soul) override;
+	virtual void AddGold(class ATreasure* Treasure) override;
+
 protected:
 
 	ECharacterState CharacterState = ECharacterState::ECS_Unequipped;
@@ -44,6 +49,7 @@ protected:
 	EActionState ActionState = EActionState::EAS_Unoccupied;
 	
 	virtual void AttackEnd() override;
+	virtual void DodgeEnd() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	USpringArmComponent* CameraBoom;
@@ -70,6 +76,9 @@ protected:
 	UInputAction* AttackAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* DodgeAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* AaravMappingContext;
 
 	/*
@@ -91,6 +100,9 @@ protected:
 	void Disarm();
 	void Arm();
 
+	bool IsOccupied();
+	bool HasEnoughStamina();
+
 	UFUNCTION(BlueprintCallable)
 	void AttachWeaponToHand();
 	
@@ -111,6 +123,7 @@ protected:
 	void SprintStart(const FInputActionValue& Value);
 	void SprintCompleted(const FInputActionValue& Value);
 	void Attack(const FInputActionValue& Value);
+	void Dodge(const FInputActionValue& Value);
 
 	void PerformInteractionTrace();
 	void Interact();
@@ -149,8 +162,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void RemoveItem(FName ItemId);
-
-	FORCEINLINE void SetOverlappedItem(AItem* Item) { OverlappedItem = Item; }
 
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
 
