@@ -117,6 +117,10 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor)
 	EnemyWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	StopAttackMontage();
+	if (IsInsideAttackRadius())
+	{
+		if (!IsDead()) StartAttackTimer();
+	}
 }
 
 float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator,
@@ -164,7 +168,7 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 		BoxTraceStart2->GetComponentRotation(),
 		ETraceTypeQuery::TraceTypeQuery1,
 		false,
-		TArray<AActor*> {this},
+		TArray<AActor*> {this, GetOwner()},
 		EDrawDebugTrace::ForDuration,
 		BoxHitResultLeft,
 		true
@@ -178,7 +182,7 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 		BoxTraceStart1->GetComponentRotation(),
 		ETraceTypeQuery::TraceTypeQuery1,
 		false,
-		TArray<AActor*> {this},
+		TArray<AActor*> {this, GetOwner()},
 		EDrawDebugTrace::ForDuration,
 		BoxHitResultRight,
 		true
@@ -276,7 +280,7 @@ void AEnemy::MoveToTarget(AActor* Target)
 
 	FAIMoveRequest MoveRequest;
 	MoveRequest.SetGoalActor(Target);
-	MoveRequest.SetAcceptanceRadius(75.f);
+	MoveRequest.SetAcceptanceRadius(AcceptanceRadius);
 	EnemyController->MoveTo(MoveRequest);
 }
 
