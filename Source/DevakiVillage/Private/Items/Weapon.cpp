@@ -86,7 +86,7 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 	if (BoxHit.GetActor())
 	{
 		
-		if (GetInstigator()->GetController())
+		if (GetInstigator() && GetInstigator()->GetController())
 		{
 			AController* Controller = Cast<AController>(GetInstigator()->GetController());
 

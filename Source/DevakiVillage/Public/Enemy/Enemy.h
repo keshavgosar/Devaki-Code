@@ -64,7 +64,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
 
-	virtual void Die() override;
+	virtual void Die_Implementation() override;
 	bool InTargetRange(AActor* Target, double Radius);
 	void MoveToTarget(AActor* Target);
 	AActor* ChoosePatrolTarget();
@@ -73,7 +73,7 @@ protected:
 	void OnPawnSeen(APawn* SeenPawn);
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-	float DeathLifeSpan = 1.f;
+	float DeathLifeSpan = 5.f;
 	
 	/*
 	 * Play Montage Functions
@@ -134,6 +134,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	double AcceptanceRadius = 50.f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float DamageBox1 = 10.f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float DamageBox2 = 10.f;
 
 	/*
 	 * Navigation

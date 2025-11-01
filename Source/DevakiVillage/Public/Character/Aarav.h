@@ -133,7 +133,7 @@ protected:
 	void InitializeMainOverlayWidget();
 	void SetHUDHealth();
 
-	virtual void Die() override;
+	virtual void Die_Implementation() override;
 
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappedItem;

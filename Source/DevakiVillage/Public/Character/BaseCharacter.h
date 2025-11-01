@@ -38,7 +38,10 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void Attack();
-	virtual void Die();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void Die();
+	
 	void DirectionalHitReact(const FVector& ImpactPoint);
 	void PlayHitSound(const FVector& ImpactPoint);
 	void SpawnHitParticle(const FVector& ImpactPoint);

@@ -434,9 +434,9 @@ void AAarav::SetHUDHealth()
 	}
 }
 
-void AAarav::Die()
+void AAarav::Die_Implementation()
 {
-	Super::Die();
+	Super::Die_Implementation();
 
 	ActionState = EActionState::EAS_Dead;
 	DisableMeshCollision();

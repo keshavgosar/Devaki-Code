@@ -54,7 +54,7 @@ AEnemy::AEnemy()
 	WeaponBox2->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Ignore);
 
 	BoxTraceStart1 = CreateDefaultSubobject<USceneComponent>(TEXT("BoxTraceStartRight"));
-	BoxTraceStart1->SetupAttachment(GetMesh(), FName("FX_Trail_02_R"));
+	BoxTraceStart1->SetupAttachment(GetMesh(), FName("FX_Trail_02_R")); 
 
 	BoxTraceEnd1 = CreateDefaultSubobject<USceneComponent>(TEXT("BoxTraceEndRight"));
 	BoxTraceEnd1->SetupAttachment(GetMesh(), FName("FX_Trail_01_R"));
@@ -195,7 +195,7 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 		
 		UGameplayStatics::ApplyDamage(
 			BoxHitResultLeft.GetActor(),
-			10.f,
+			DamageBox2,
 			GetInstigator()->GetController(),
 			this,
 			UDamageType::StaticClass()
@@ -216,7 +216,7 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 		// Applies the Damage
 		UGameplayStatics::ApplyDamage(
 			BoxHitResultRight.GetActor(),
-			10.f,
+			DamageBox1,
 			GetInstigator()->GetController(),
 			this,
 			UDamageType::StaticClass()
@@ -237,20 +237,22 @@ void AEnemy::SpawnSouls()
 	UWorld* World = GetWorld();
 	if (World && SoulsClass && AttributeComponent)
 	{
-		ASouls* SpawnedSoul = World->SpawnActor<ASouls>(SoulsClass, GetActorLocation(), GetActorRotation());
+		const FVector SpawnLocation = GetActorLocation() + FVector(0.f, 0.f, 120.f);
+		ASouls* SpawnedSoul = World->SpawnActor<ASouls>(SoulsClass, SpawnLocation, GetActorRotation());
 		if (SpawnedSoul)
 		{
 			SpawnedSoul->SetSoul(AttributeComponent->GetSouls());
 			//SpawnedSoul->FinishSpawning(SpawnedSoul->GetTransform());
+			SpawnedSoul->SetOwner(this);
 		}
 		GetWorldTimerManager().ClearTimer(SpawnTimerHandle);
 	}
 	
 }
 
-void AEnemy::Die()
+void AEnemy::Die_Implementation()
 {
-	Super::Die();
+	Super::Die_Implementation();
 	EnemyState = EEnemyState::EES_Dead;
 	ClearAttackTimer();
 	HideHealthBar();
