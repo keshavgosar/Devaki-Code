@@ -79,6 +79,9 @@ protected:
 	UInputAction* DodgeAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* TargetLockAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* AaravMappingContext;
 
 	/*
@@ -144,6 +147,32 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void HitReactEnd();
 
+	// Target Lock System
+	UPROPERTY(EditAnywhere, Category = "Combat | Target Lock")
+	float TargetLockRange = 1000.f;
+    
+	UPROPERTY(EditAnywhere, Category = "Combat | Target Lock")
+	float TargetLockRadius = 300.f;
+    
+	UPROPERTY(BlueprintReadOnly, Category = "Combat | Target Lock")
+	bool bIsTargetLocked = false;
+    
+	UPROPERTY(BlueprintReadOnly, Category = "Combat | Target Lock")
+	AActor* LockedTarget = nullptr;
+
+	// Store original camera settings to restore later
+	bool bOriginalUsePawnControlRotation;
+	bool bOriginalOrientRotationToMovement;
+	bool bOriginalUseControllerRotationYaw;
+
+	// Target lock functions
+	void FindNearestEnemy();
+	void LockOnTarget(const FInputActionValue& Value);
+	void ClearTargetLock();
+	bool IsTargetValid();
+	void UpdateLockedTarget(float DeltaTime);
+	void UpdateCameraToTarget(float DeltaTime);
+
 public:
 
 	UPROPERTY(VisibleInstanceOnly)
@@ -166,5 +195,8 @@ public:
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
 
 	FORCEINLINE EActionState GetActionState() const { return ActionState; }
+
+	FORCEINLINE bool IsTargetLocked() const { return bIsTargetLocked; }
+	FORCEINLINE AActor* GetLockedTarget() const { return LockedTarget; }
 
 };

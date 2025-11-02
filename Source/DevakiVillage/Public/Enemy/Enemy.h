@@ -32,6 +32,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void EnemyWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
+	
+	bool IsDead();
 
 protected:
 	/*
@@ -87,6 +89,7 @@ protected:
 
 	virtual void HandleDamage(float DamageAmount) override;
 
+
 private:
 	void InitializeEnemy();
 	/*
@@ -105,7 +108,6 @@ private:
 	bool IsChasing();
 	bool IsInsideAttackRadius();
 	bool IsAttacking();
-	bool IsDead();
 	bool IsEngaged();
 
 	void ClearPatrolTimer();
