@@ -8,6 +8,13 @@ Saved/
 *.VC.db
 *.VC.opendb
 
+# Ignore content folder which are too large
+Content/ParagonRampage
+Content/EuropeanHornbeam
+Content/Dungeon_Modular_V1
+Content/Fab
+Content/ExternalAssets
+
 # Ignore user-specific files
 *.suo
 *.user
