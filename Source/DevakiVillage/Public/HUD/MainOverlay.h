@@ -21,6 +21,27 @@ public:
 	void SetGold(int32 GoldAmount);
 	void SetSouls(int32 SoulsAmount);
 
+	// Boss Health Bar Functions
+	void ShowBossHealthBar();
+	void UpdateBossHealthBar(float Percent);
+	void HideBossHealthBar();
+
+	// Boss Health Bar Widget
+	UPROPERTY(meta = (BindWidget))
+	class UBossHealthBar* BossHealthBar;
+	
+	// Interaction Prompt Functions
+     UFUNCTION(BlueprintCallable)
+     void ShowInteractionPrompt(const FString& PromptText);
+        
+	UFUNCTION(BlueprintCallable)
+	void HideInteractionPrompt();
+
+	// Interaction Prompt Widget
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* InteractionPromptText;
+
+
 private:
 	
 	UPROPERTY(meta=(BindWidget))

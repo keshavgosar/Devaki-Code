@@ -32,10 +32,21 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void EnemyWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled);
-	
+
+	UFUNCTION(BlueprintCallable)
 	bool IsDead();
 
+	UPROPERTY(EditAnywhere, Category = "End Screen")
+	TSubclassOf<class UThankYouWidget> ThankYouWidgetClass;
+
+	UPROPERTY()
+	FTimerHandle EndScreenTimerHandle;
+
 protected:
+
+	UPROPERTY(EditAnywhere, Category = "Level Gate")
+	float FadeOutDuration = 2.f;
+	
 	/*
 	 * Weapon Properties
 	 */
@@ -66,6 +77,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	EEnemyState EnemyState = EEnemyState::EES_Patrolling;
 
+	void ShowThankYouWidget();
+	
 	virtual void Die_Implementation() override;
 	bool InTargetRange(AActor* Target, double Radius);
 	void MoveToTarget(AActor* Target);
@@ -186,5 +199,36 @@ private:
 	TSubclassOf<class ASouls> SoulsClass;
 	
 	FTimerHandle SpawnTimerHandle;
+
+
+protected:
+	// Tracing during attack
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	bool bIsPerformingTrace = false;
+
+	UPROPERTY()
+	TArray<AActor*> HitActorsThisSwing;
+
+	// Boss Settings
+	UPROPERTY(EditAnywhere, Category = "Boss")
+	bool bIsBoss = false;
+
+public:
+	// Call these from Animation Notifies
+	UFUNCTION(BlueprintCallable)
+	void StartWeaponTrace();
+    
+	UFUNCTION(BlueprintCallable)
+	void EndWeaponTrace();
+
+	FORCEINLINE UAttributeComponent* GetAttributeComponent() const { return AttributeComponent; }
+
+private:
+	void PerformWeaponTrace();
+
+	void ShowBossHealthBar();
+	void UpdateBossHealthBar();
+	void HideBossHealthBar();
+	class UMainOverlay* GetPlayerOverlay();
 
 };

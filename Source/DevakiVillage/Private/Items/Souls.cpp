@@ -4,8 +4,7 @@
 #include "Items/Souls.h"
 
 #include "Interfaces/PickupInterface.h"
-#include "NiagaraFunctionLibrary.h"
-#include "NiagaraVariant.h"
+#include "Character/Aarav.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 void ASouls::BeginPlay()
@@ -55,15 +54,18 @@ void ASouls::Tick(float DeltaTime)
 void ASouls::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	IPickupInterface* PickupInterface = Cast<IPickupInterface>(OtherActor);
-
-	if (PickupInterface)
+	AAarav* PlayerCharacter = Cast<AAarav>(OtherActor);
+	
+	if (PlayerCharacter)
 	{
-		PickupInterface->AddSouls(this);
+		IPickupInterface* PickupInterface = Cast<IPickupInterface>(OtherActor);
+		
+		if (PickupInterface)
+		{
+			PickupInterface->AddSouls(this);
+			SpawnPickupSystem();
+			SpawnPickupSound();
+			Destroy();
+		}
 	}
-
-	SpawnPickupSystem();
-	SpawnPickupSound();
-
-	Destroy();
 }
