@@ -6,6 +6,7 @@
 #include "Component/AttributeComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Enemy/Enemy.h"
 #include "Items/Weapon.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -125,7 +126,20 @@ void ABaseCharacter::StopAttackMontage()
 
 FVector ABaseCharacter::GetTranslationWarpTarget()
 {
-	if (CombatTarget == nullptr) return FVector();
+	if (CombatTarget == nullptr)
+	{
+		UE_LOG(LogTemp, Verbose, TEXT("GetTranslationWarpTarget: No combat target"));
+		return FVector::ZeroVector;
+	}
+    
+	// Additional safety check for dead enemies
+	AEnemy* EnemyTarget = Cast<AEnemy>(CombatTarget);
+	if (EnemyTarget && EnemyTarget->IsDead())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetTranslationWarpTarget: Target is dead, clearing"));
+		CombatTarget = nullptr;
+		return FVector::ZeroVector;
+	}
 
 	const FVector CombatTargetLocation = CombatTarget->GetActorLocation();
 	const FVector Location = GetActorLocation();
@@ -138,11 +152,22 @@ FVector ABaseCharacter::GetTranslationWarpTarget()
 
 FVector ABaseCharacter::GetRotationWarpTarget()
 {
-	if (CombatTarget)
+	if (CombatTarget == nullptr)
 	{
-		return CombatTarget->GetActorLocation();
+		UE_LOG(LogTemp, Verbose, TEXT("GetRotationWarpTarget: No combat target"));
+		return FVector::ZeroVector;
 	}
-	return FVector();
+    
+	// Additional safety check for dead enemies
+	AEnemy* EnemyTarget = Cast<AEnemy>(CombatTarget);
+	if (EnemyTarget && EnemyTarget->IsDead())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetRotationWarpTarget: Target is dead, clearing"));
+		CombatTarget = nullptr;
+		return FVector::ZeroVector;
+	}
+    
+	return CombatTarget->GetActorLocation();
 }
 
 void ABaseCharacter::DirectionalHitReact(const FVector& ImpactPoint)

@@ -3,11 +3,14 @@
 
 #include "Enemy/Enemy.h"
 
+#include "Character/Aarav.h"
 #include "Component/AttributeComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HUD/HealthBarComponent.h"
+#include "HUD/MainOverlay.h"
+#include "HUD/MenuWidgets/ThankYouWidget.h"
 #include "Items/Souls.h"
 #include "Kismet/GameplayStatics.h"
 #include "Navigation/PathFollowingComponent.h"
@@ -45,13 +48,16 @@ AEnemy::AEnemy()
 	WeaponBox1->SetupAttachment(GetMesh(), FName("weapon_sword_r"));
 	WeaponBox1->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponBox1->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
-	WeaponBox1->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Ignore);
+	//WeaponBox1->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Ignore);
 
 	WeaponBox2 = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponBox2"));
 	WeaponBox2->SetupAttachment(GetMesh(), FName("weapon_sword_l"));
 	WeaponBox2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponBox2->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
-	WeaponBox2->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Ignore);
+	//WeaponBox2->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Ignore);
+
+	WeaponBox1->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Overlap); // Changed from ECR_Ignore
+	WeaponBox2->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Overlap); // Changed from ECR_Ignore
 
 	BoxTraceStart1 = CreateDefaultSubobject<USceneComponent>(TEXT("BoxTraceStartRight"));
 	BoxTraceStart1->SetupAttachment(GetMesh(), FName("FX_Trail_02_R")); 
@@ -71,7 +77,7 @@ void AEnemy::BeginPlay()
 	Super::BeginPlay();
 
 	Tags.Add("Enemy");
-	
+    
 	if (PawnSensingComponent)
 	{
 		PawnSensingComponent->OnSeePawn.AddDynamic(this, &AEnemy::OnPawnSeen);
@@ -79,7 +85,7 @@ void AEnemy::BeginPlay()
 
 	if (WeaponBox1)
 	{
-		WeaponBox1->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::OnBoxOverlap);
+		WeaponBox1->OnComponentBeginOverlap.AddDynamic(this, &AEnemy:: OnBoxOverlap);
 	}
 
 	if (WeaponBox2)
@@ -88,6 +94,12 @@ void AEnemy::BeginPlay()
 	}
 
 	InitializeEnemy();
+
+	// Hide world-space health bar for bosses
+	if (bIsBoss && HealthBarWidgetClass)
+	{
+		HealthBarWidgetClass->SetVisibility(false);
+	}
 }
 
 void AEnemy::Tick(float DeltaTime)
@@ -95,7 +107,13 @@ void AEnemy::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	if (IsDead()) return;
-	
+
+	// Perform weapon trace every frame during attack
+	if (bIsPerformingTrace)
+	{
+		PerformWeaponTrace();
+	}
+    
 	if (EnemyState > EEnemyState::EES_Patrolling)
 	{
 		CheckCombatTarget();
@@ -143,13 +161,14 @@ float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEv
 
 bool AEnemy::ActorIsSameType(AActor* OtherActor)
 {
-	return GetOwner()->ActorHasTag(TEXT("Enemy")) && OtherActor->ActorHasTag(TEXT("Enemy"));
+	//return GetOwner()->ActorHasTag(TEXT("Enemy")) && OtherActor->ActorHasTag(TEXT("Enemy"));
+	return this->ActorHasTag(TEXT("Enemy")) && OtherActor->ActorHasTag(TEXT("Enemy"));
 }
 
 void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                           int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (ActorIsSameType(OtherActor)) return;
+	/*if (ActorIsSameType(OtherActor)) return;
 	
 	FVector StartLocationLeft = BoxTraceStart2->GetComponentLocation();
 	FVector EndLocationLeft = BoxTraceEnd2->GetComponentLocation();
@@ -159,6 +178,9 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 
 	FHitResult BoxHitResultLeft;
 	FHitResult BoxHitResultRight;
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
 
 	UKismetSystemLibrary::BoxTraceSingle(
 		this,
@@ -229,7 +251,236 @@ void AEnemy::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 		}
 		
 		//CreateFields(BoxHit.ImpactPoint);
-	}
+	}*/
+
+	// Check if hitting another enemy
+    if (ActorIsSameType(OtherActor)) return;
+    
+    FVector StartLocationLeft = BoxTraceStart2->GetComponentLocation();
+    FVector EndLocationLeft = BoxTraceEnd2->GetComponentLocation();
+
+    FVector StartLocationRight = BoxTraceStart1->GetComponentLocation();
+    FVector EndLocationRight = BoxTraceEnd1->GetComponentLocation();
+
+    FHitResult BoxHitResultLeft;
+    FHitResult BoxHitResultRight;
+
+    // Create ignore list - only ignore self
+    TArray<AActor*> ActorsToIgnore;
+    ActorsToIgnore.Add(this);
+
+    UKismetSystemLibrary::BoxTraceSingle(
+        this,
+        StartLocationLeft,
+        EndLocationLeft,
+        FVector(5.f, 5.f, 5.f),
+        BoxTraceStart2->GetComponentRotation(),
+        ETraceTypeQuery::TraceTypeQuery1,
+        false,
+        ActorsToIgnore,
+        EDrawDebugTrace::ForDuration,
+        BoxHitResultLeft,
+        true
+    );
+
+    UKismetSystemLibrary::BoxTraceSingle(
+        this,
+        StartLocationRight,
+        EndLocationRight,
+        FVector(5.f, 5.f, 5.f),
+        BoxTraceStart1->GetComponentRotation(),
+        ETraceTypeQuery::TraceTypeQuery1,
+        false,
+        ActorsToIgnore,
+        EDrawDebugTrace:: ForDuration,
+        BoxHitResultRight,
+        true
+    );
+
+    if (BoxHitResultLeft.GetActor())
+    {
+        // Check if hitting another enemy
+        if (ActorIsSameType(BoxHitResultLeft.GetActor())) return;
+        
+        // Use GetController() instead of GetInstigator()->GetController()
+        AController* MyController = GetController();
+        if (MyController)
+        {
+            UGameplayStatics::ApplyDamage(
+                BoxHitResultLeft.GetActor(),
+                DamageBox2,
+                MyController,
+                this,
+                UDamageType::StaticClass()
+            );
+        }
+        
+        IHitInterface* HitInterface = Cast<IHitInterface>(BoxHitResultLeft.GetActor());
+        if (HitInterface)
+        {
+            HitInterface->Execute_GetHit(BoxHitResultLeft.GetActor(), BoxHitResultLeft.ImpactPoint, this);
+        }
+    }
+
+    if (BoxHitResultRight.GetActor())
+    {
+        if (ActorIsSameType(BoxHitResultRight.GetActor())) return;
+        
+        AController* MyController = GetController();
+        if (MyController)
+        {
+            UGameplayStatics::ApplyDamage(
+                BoxHitResultRight.GetActor(),
+                DamageBox1,
+                MyController,
+                this,
+                UDamageType::StaticClass()
+            );
+        }
+        
+        IHitInterface* HitInterface = Cast<IHitInterface>(BoxHitResultRight.GetActor());
+        if (HitInterface)
+        {
+            HitInterface->Execute_GetHit(BoxHitResultRight.GetActor(), BoxHitResultRight.ImpactPoint, this);
+        }
+    }
+}
+
+void AEnemy::StartWeaponTrace()
+{
+    // Clear previous hits
+    HitActorsThisSwing.Empty();
+    bIsPerformingTrace = true;
+    
+    UE_LOG(LogTemp, Warning, TEXT("=== Weapon Trace STARTED ==="));
+}
+
+void AEnemy::EndWeaponTrace()
+{
+    bIsPerformingTrace = false;
+    HitActorsThisSwing. Empty();
+    
+    UE_LOG(LogTemp, Warning, TEXT("=== Weapon Trace ENDED ==="));
+}
+
+void AEnemy:: PerformWeaponTrace()
+{
+    if (!bIsPerformingTrace) return;
+
+    FVector StartLocationLeft = BoxTraceStart2->GetComponentLocation();
+    FVector EndLocationLeft = BoxTraceEnd2->GetComponentLocation();
+
+    FVector StartLocationRight = BoxTraceStart1->GetComponentLocation();
+    FVector EndLocationRight = BoxTraceEnd1->GetComponentLocation();
+
+    // INCREASED BOX SIZE from 5 to 20 and using Multi trace
+    FVector BoxExtent = FVector(20.f, 20.f, 20.f);
+
+    TArray<FHitResult> BoxHitResultsLeft;
+    TArray<FHitResult> BoxHitResultsRight;
+
+    TArray<AActor*> ActorsToIgnore;
+    ActorsToIgnore.Add(this);
+    ActorsToIgnore. Append(HitActorsThisSwing);
+
+    // Use BoxTraceMulti to get ALL hits (not just first one like floor)
+    UKismetSystemLibrary::BoxTraceMulti(
+        this,
+        StartLocationRight,
+        EndLocationRight,
+        BoxExtent,
+        BoxTraceStart1->GetComponentRotation(),
+        ETraceTypeQuery::TraceTypeQuery1,
+        false,
+        ActorsToIgnore,
+        EDrawDebugTrace::None,
+        BoxHitResultsRight,
+        true
+    );
+
+    UKismetSystemLibrary::BoxTraceMulti(
+        this,
+        StartLocationLeft,
+        EndLocationLeft,
+        BoxExtent,
+        BoxTraceStart2->GetComponentRotation(),
+        ETraceTypeQuery::TraceTypeQuery1,
+        false,
+        ActorsToIgnore,
+        EDrawDebugTrace::None,
+        BoxHitResultsLeft,
+        true
+    );
+
+    // Process all right weapon hits
+    for (FHitResult& Hit : BoxHitResultsRight)
+    {
+        AActor* HitActor = Hit.GetActor();
+        APawn* HitPawn = Cast<APawn>(HitActor);
+        
+        // ONLY hit Pawns (characters), ignore floor/walls/props
+        if (HitPawn && 
+            !HitActorsThisSwing.Contains(HitActor) && 
+            !ActorIsSameType(HitActor))
+        {
+            HitActorsThisSwing.Add(HitActor);
+            
+            UE_LOG(LogTemp, Error, TEXT(">>> RIGHT WEAPON HIT PAWN: %s <<<"), *HitActor->GetName());
+            
+            AController* MyController = GetController();
+            if (MyController)
+            {
+                UGameplayStatics::ApplyDamage(
+                    HitActor,
+                    DamageBox1,
+                    MyController,
+                    this,
+                    UDamageType::StaticClass()
+                );
+            }
+            
+            IHitInterface* HitInterface = Cast<IHitInterface>(HitActor);
+            if (HitInterface)
+            {
+                HitInterface->Execute_GetHit(HitActor, Hit.ImpactPoint, this);
+            }
+        }
+    }
+
+    // Process all left weapon hits
+    for (FHitResult& Hit : BoxHitResultsLeft)
+    {
+        AActor* HitActor = Hit.GetActor();
+        APawn* HitPawn = Cast<APawn>(HitActor);
+        
+        // ONLY hit Pawns (characters), ignore floor/walls/props
+        if (HitPawn && 
+            ! HitActorsThisSwing.Contains(HitActor) && 
+            !ActorIsSameType(HitActor))
+        {
+            HitActorsThisSwing.Add(HitActor);
+            
+            UE_LOG(LogTemp, Error, TEXT(">>> LEFT WEAPON HIT PAWN: %s <<<"), *HitActor->GetName());
+            
+            AController* MyController = GetController();
+            if (MyController)
+            {
+                UGameplayStatics::ApplyDamage(
+                    HitActor,
+                    DamageBox2,
+                    MyController,
+                    this,
+                    UDamageType::StaticClass()
+                );
+            }
+            
+            IHitInterface* HitInterface = Cast<IHitInterface>(HitActor);
+            if (HitInterface)
+            {
+                HitInterface->Execute_GetHit(HitActor, Hit.ImpactPoint, this);
+            }
+        }
+    }
 }
 
 void AEnemy::SpawnSouls()
@@ -250,6 +501,42 @@ void AEnemy::SpawnSouls()
 	
 }
 
+void AEnemy::ShowThankYouWidget()
+{
+	if (!ThankYouWidgetClass)
+	{
+		return;
+	}
+
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	if (!PC)
+	{
+		return;
+	}
+
+	// Create and add widget
+	UThankYouWidget* ThankYouWidget = CreateWidget<UThankYouWidget>(PC, ThankYouWidgetClass);
+	if (!ThankYouWidget)
+	{
+		return;
+	}
+
+	PC->PlayerCameraManager->StartCameraFade(0.f, 1.f, FadeOutDuration, FLinearColor::Black, false, true);
+
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, [ThankYouWidget, PC]()
+	{
+		if (ThankYouWidget)
+		{
+			ThankYouWidget->AddToViewport();
+			FInputModeUIOnly InputMode;
+			InputMode.SetWidgetToFocus(ThankYouWidget->TakeWidget());
+			PC->SetInputMode(InputMode);
+			PC->bShowMouseCursor = true;
+		}
+	}, FadeOutDuration, false);
+}
+
 void AEnemy::Die_Implementation()
 {
 	Super::Die_Implementation();
@@ -263,6 +550,25 @@ void AEnemy::Die_Implementation()
 	WeaponBox1->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponBox2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	if (bIsBoss)
+	{
+		HideBossHealthBar();
+
+		GetWorldTimerManager().SetTimer(EndScreenTimerHandle, this, &AEnemy::ShowThankYouWidget, 3.0f);
+		
+	}
+
+	// Clear combat target from player if this enemy was the target
+	if (CombatTarget)
+	{
+		AAarav* Player = Cast<AAarav>(CombatTarget);
+		if (Player && Player->GetCombatTarget() == this)
+		{
+			Player->ClearCombatTarget();
+			UE_LOG(LogTemp, Warning, TEXT("Cleared player's combat target"));
+		}
+	}
 
 	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &AEnemy::SpawnSouls, 0.5f);
 }
@@ -301,6 +607,12 @@ void AEnemy::OnPawnSeen(APawn* SeenPawn)
 		CombatTarget = SeenPawn;
 		ClearPatrolTimer();
 		ChaseTarget();
+
+		// Show boss health bar when combat starts
+		if (bIsBoss)
+		{
+			ShowBossHealthBar();
+		}
 	}
 	
 }
@@ -339,9 +651,21 @@ void AEnemy::HandleDamage(float DamageAmount)
 {
 	Super::HandleDamage(DamageAmount);
 
-	if (AttributeComponent && HealthBarWidgetClass)
+	if (AttributeComponent)
 	{
-		HealthBarWidgetClass->SetProgressBarPercent(AttributeComponent->GetHealthPercentage());
+		if (bIsBoss)
+		{
+			// Update boss health bar on main HUD
+			UpdateBossHealthBar();
+		}
+		else
+		{
+			// Update regular world-space health bar
+			if (HealthBarWidgetClass)
+			{
+				HealthBarWidgetClass->SetProgressBarPercent(AttributeComponent->GetHealthPercentage());
+			}
+		}
 	}
 }
 
@@ -519,5 +843,55 @@ AActor* AEnemy::ChoosePatrolTarget()
 	
 	return nullptr;
 	
+}
+
+UMainOverlay* AEnemy::GetPlayerOverlay()
+{
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController)
+	{
+		AAarav* Player = Cast<AAarav>(PlayerController->GetPawn());
+		if (Player)
+		{
+			return Player->GetMainOverlay();
+		}
+	}
+	return nullptr;
+}
+
+void AEnemy::ShowBossHealthBar()
+{
+	if (! bIsBoss) return;
+
+	UMainOverlay* Overlay = GetPlayerOverlay();
+	if (Overlay)
+	{
+		Overlay->ShowBossHealthBar();
+		UpdateBossHealthBar(); // Set initial health
+        
+		UE_LOG(LogTemp, Warning, TEXT("Boss Health Bar Shown"));
+	}
+}
+
+void AEnemy::UpdateBossHealthBar()
+{
+	if (!bIsBoss) return;
+
+	UMainOverlay* Overlay = GetPlayerOverlay();
+	if (Overlay && AttributeComponent)
+	{
+		Overlay->UpdateBossHealthBar(AttributeComponent->GetHealthPercentage());
+	}
+}
+
+void AEnemy::HideBossHealthBar()
+{
+	if (!bIsBoss) return;
+
+	UMainOverlay* Overlay = GetPlayerOverlay();
+	if (Overlay)
+	{
+		Overlay->HideBossHealthBar();
+	}
 }
 

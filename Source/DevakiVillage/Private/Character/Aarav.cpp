@@ -11,7 +11,6 @@
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "Component/AttributeComponent.h"
-#include "Components/BoxComponent.h"
 #include "Enemy/Enemy.h"
 #include "HUD/GameplayMainHUD.h"
 #include "HUD/MainOverlay.h"
@@ -19,7 +18,6 @@
 #include "Items/Treasure.h"
 #include "Items/Weapon.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Public/Interfaces/InteractableInterface.h"
 
 // Sets default values
@@ -85,12 +83,6 @@ void AAarav::Tick(float DeltaTime)
 
 	PerformInteractionTrace();
 
-	// Update Target Lock
-	if (bIsTargetLocked)
-	{
-		UpdateLockedTarget(DeltaTime);
-	}
-
 	if (AttributeComponent && MainOverlay)
 	{
 		AttributeComponent->RegenStamina(DeltaTime);
@@ -114,7 +106,6 @@ void AAarav::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInput->BindAction(InteractionAction, ETriggerEvent::Triggered, this, &AAarav::Interact);
 		EnhancedInput->BindAction(AttackAction, ETriggerEvent::Triggered, this , &AAarav::Attack);
 		EnhancedInput->BindAction(DodgeAction, ETriggerEvent::Triggered, this , &AAarav::Dodge);
-		EnhancedInput->BindAction(TargetLockAction, ETriggerEvent::Started, this , &AAarav::LockOnTarget);
 	}
 
 }
@@ -130,10 +121,17 @@ void AAarav::Jump()
 void AAarav::GetHit_Implementation(const FVector& ImpactPoint, AActor* HitActor)
 {
 	Super::GetHit_Implementation(ImpactPoint, HitActor);
+
+	TArray<AActor*> EnemyActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), EnemyActors);
 	
-	if (AEnemy* EnemyClass = Cast<AEnemy>(HitActor))
+	for (AActor* Actor : EnemyActors)
 	{
-		EnemyClass->EnemyWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+		AEnemy* TempEnemy = Cast<AEnemy>(Actor);
+		if (TempEnemy)
+		{
+			TempEnemy->EnemyWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
 	}
 	
 	SetWeaponCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -214,8 +212,6 @@ void AAarav::Move(const FInputActionValue& Value)
 
 void AAarav::Look(const FInputActionValue& Value)
 {
-	// Don't allow manual camera control when target is locked
-	if (bIsTargetLocked) return;
 	
 	FVector2D LookAxis = Value.Get<FVector2D>();
 
@@ -246,12 +242,10 @@ void AAarav::Attack(const FInputActionValue& Value)
 	
 	if (CanAttack())
 	{
-		// Set combat target to locked target for motion warping
-		if (bIsTargetLocked && LockedTarget)
-		{
-			CombatTarget = LockedTarget;
-		}
-		
+		// Find nearest enemy
+		FindNearestEnemyForAttack();
+        
+		// Play attack montage
 		PlayAttackMontage();
 		ActionState = EActionState::EAS_Attacking;
 	}
@@ -274,6 +268,13 @@ void AAarav::Dodge(const FInputActionValue& Value)
 
 void AAarav::PerformInteractionTrace()
 {
+	// If FocusedActor is manually set (by gate trigger), keep it
+	if (FocusedActor && FocusedActor->Implements<UInteractableInterface>())
+	{
+		// Don't override - it's set by something else (like gate trigger)
+		return;
+	}
+
 	FVector Start = Camera->GetComponentLocation();
 	FVector End = Start + Camera->GetForwardVector() * TraceDistance;
 
@@ -298,28 +299,40 @@ void AAarav::PerformInteractionTrace()
 
 void AAarav::Interact()
 {
+	// Priority 1: Check for interactable actors (gates, NPCs, etc.)
+	// Use FocusedActor from camera trace
 	if (FocusedActor && FocusedActor->Implements<UInteractableInterface>())
 	{
+		UE_LOG(LogTemp, Error, TEXT("=== INTERACTING WITH:  %s ==="), *FocusedActor->GetName());
 		IInteractableInterface::Execute_Interact(FocusedActor, this);
+		return; // STOP HERE - Don't check weapons or arm/disarm
 	}
 
+	// Priority 2: Check for overlapped weapons (from overlap, not trace)
 	AWeapon* OverlappedWeapon = Cast<AWeapon>(OverlappedItem);
-
 	if (OverlappedWeapon)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Equipping weapon:   %s"), *OverlappedWeapon->GetName());
 		EquipWeapon(OverlappedWeapon);
+		return; // STOP HERE - Don't check arm/disarm
 	}
-	else
+
+	// Priority 3: Arm/Disarm weapon (only if no gate or weapon interaction)
+	if (CanDisarm())
 	{
-		if(CanDisarm())
-		{
-			Disarm();
-		}
-		else if(CanArm())
-		{
-			Arm();
-		}
+		UE_LOG(LogTemp, Warning, TEXT("Disarming weapon"));
+		Disarm();
+		return;
 	}
+    
+	if (CanArm())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Arming weapon"));
+		Arm();
+		return;
+	}
+    
+	UE_LOG(LogTemp, Verbose, TEXT("No interaction available"));
 }
 
 void AAarav::EquipWeapon(AWeapon* Weapon)
@@ -335,151 +348,65 @@ void AAarav::HitReactEnd()
 	ActionState = EActionState::EAS_Unoccupied;
 }
 
-void AAarav::FindNearestEnemy()
+void AAarav::FindNearestEnemyForAttack()
 {
+	CombatTarget = nullptr;
+    
 	TArray<AActor*> Enemies;
-    UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("Enemy"), Enemies);
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("Enemy"), Enemies);
     
-    AActor* NearestEnemy = nullptr;
-    float NearestDistance = TargetLockRange;
+	AActor* NearestEnemy = nullptr;
+	float NearestDistance = AttackRange;
     
-    const FVector PlayerLocation = GetActorLocation();
-    const FVector PlayerForward = Camera->GetForwardVector(); // Use camera forward, not actor
+	const FVector PlayerLocation = GetActorLocation();
+	const FVector PlayerForward = GetActorForwardVector();
     
-    for (AActor* Enemy : Enemies)
-    {
-        if (!Enemy) continue;
-        
-        AEnemy* EnemyClass = Cast<AEnemy>(Enemy);
-        if (!EnemyClass || EnemyClass->IsDead()) continue;
-        
-        const FVector ToEnemy = Enemy->GetActorLocation() - PlayerLocation;
-        const float Distance = ToEnemy.Size();
-        
-        // Check if within range
-        if (Distance > TargetLockRange) continue;
-        
-        // Check if within camera view (dot product for forward angle)
-        const float DotProduct = FVector::DotProduct(PlayerForward, ToEnemy.GetSafeNormal());
-        if (DotProduct < 0.3f) continue; // Roughly 70-degree cone
-        
-        // Check if closer than current nearest
-        if (Distance < NearestDistance)
-        {
-            NearestDistance = Distance;
-            NearestEnemy = Enemy;
-        }
-    }
-    
-    if (NearestEnemy)
-    {
-        LockedTarget = NearestEnemy;
-        CombatTarget = NearestEnemy; // Set as combat target for motion warping
-        bIsTargetLocked = true;
-        
-        // Store original camera settings
-        bOriginalUsePawnControlRotation = CameraBoom->bUsePawnControlRotation;
-        bOriginalOrientRotationToMovement = GetCharacterMovement()->bOrientRotationToMovement;
-        bOriginalUseControllerRotationYaw = bUseControllerRotationYaw;
-        
-        // Configure camera for lock-on
-        CameraBoom->bUsePawnControlRotation = false;
-        
-        // Enable character rotation with controller (for strafing)
-        GetCharacterMovement()->bOrientRotationToMovement = false;
-        bUseControllerRotationYaw = true;
-        
-        UE_LOG(LogTemp, Warning, TEXT("Target Locked: %s"), *NearestEnemy->GetName());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("No valid target found!"));
-    }
-}
-
-void AAarav::LockOnTarget(const FInputActionValue& Value)
-{
-	if (bIsTargetLocked)
+	for (AActor* Enemy : Enemies)
 	{
-		ClearTargetLock();
+		if (! Enemy) continue;
+        
+		AEnemy* EnemyClass = Cast<AEnemy>(Enemy);
+		if (!EnemyClass) continue;
+        
+		// CRITICAL: Check BOTH IsDead() AND health
+		if (EnemyClass->IsDead())
+		{
+			UE_LOG(LogTemp, Verbose, TEXT("❌ Enemy is DEAD (state): %s"), *Enemy->GetName());
+			continue;
+		}
+        
+		// Additional safety:  check health directly
+		if (EnemyClass->GetAttributeComponent() && EnemyClass->GetAttributeComponent()->GetHealthPercentage() <= 0.f)
+		{
+			UE_LOG(LogTemp, Verbose, TEXT("❌ Enemy has 0 health:  %s"), *Enemy->GetName());
+			continue;
+		}
+        
+		const FVector ToEnemy = Enemy->GetActorLocation() - PlayerLocation;
+		const float Distance = ToEnemy. Size();
+        
+		if (Distance > AttackRange) continue;
+        
+		const float DotProduct = FVector:: DotProduct(PlayerForward, ToEnemy.GetSafeNormal());
+		if (DotProduct < -0.5f) continue;
+        
+		if (Distance < NearestDistance)
+		{
+			NearestDistance = Distance;
+			NearestEnemy = Enemy;
+		}
+	}
+    
+	if (NearestEnemy)
+	{
+		CombatTarget = NearestEnemy;
+		UE_LOG(LogTemp, Warning, TEXT("✓ Found ALIVE target: %s"), *NearestEnemy->GetName());
 	}
 	else
 	{
-		FindNearestEnemy();
+		CombatTarget = nullptr;
+		UE_LOG(LogTemp, Warning, TEXT("✗ No alive enemy - attacking without warp"));
 	}
-}
-
-void AAarav::ClearTargetLock()
-{
-	if (!bIsTargetLocked) return; // Prevent clearing if not locked
-    
-	bIsTargetLocked = false;
-	LockedTarget = nullptr;
-	CombatTarget = nullptr;
-    
-	// Restore original camera settings
-	if (CameraBoom)
-	{
-		CameraBoom->bUsePawnControlRotation = bOriginalUsePawnControlRotation;
-	}
-    
-	GetCharacterMovement()->bOrientRotationToMovement = bOriginalOrientRotationToMovement;
-	bUseControllerRotationYaw = bOriginalUseControllerRotationYaw;
-    
-	UE_LOG(LogTemp, Warning, TEXT("Target Lock Cleared"));
-}
-
-bool AAarav::IsTargetValid()
-{
-	if (!LockedTarget) return false;
-    
-	// Check if enemy is dead
-	if (AEnemy* Enemy = Cast<AEnemy>(LockedTarget))
-	{
-		if (Enemy->IsDead()) return false;
-	}
-    
-	// Check distance
-	const float Distance = FVector::Dist(GetActorLocation(), LockedTarget->GetActorLocation());
-	if (Distance > TargetLockRange * 1.5f) return false;
-    
-	return true;
-}
-
-void AAarav::UpdateLockedTarget(float DeltaTime)
-{
-	if (!IsTargetValid())
-	{
-		ClearTargetLock();
-		return;
-	}
-    
-	// Force camera to look at target every frame
-	// This keeps the lock active even during attacks
-	UpdateCameraToTarget(DeltaTime);
-}
-
-void AAarav::UpdateCameraToTarget(float DeltaTime)
-{
-	if (!LockedTarget || !Controller) return;
-    
-	// Get target location (aim slightly above ground for better framing)
-	const FVector TargetLocation = LockedTarget->GetActorLocation() + FVector(0.f, 0.f, 50.f);
-	const FVector PlayerLocation = GetActorLocation();
-    
-	// Calculate the rotation needed to look at target
-	const FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(PlayerLocation, TargetLocation);
-    
-	// Get current controller rotation
-	const FRotator CurrentRotation = GetController()->GetControlRotation();
-    
-	// SMOOTH INTERPOLATION - This fixes the blur/shake issue
-	// Higher value = faster rotation (try values between 5.0 - 15.0)
-	const float InterpSpeed = 10.f;
-	const FRotator NewRotation = FMath::RInterpTo(CurrentRotation, LookAtRotation, DeltaTime, InterpSpeed);
-    
-	// Set controller rotation smoothly
-	GetController()->SetControlRotation(NewRotation);
 }
 
 void AAarav::AddItem(FName ItemId)
@@ -621,4 +548,22 @@ void AAarav::Die_Implementation()
 
 	ActionState = EActionState::EAS_Dead;
 	DisableMeshCollision();
+}
+
+void AAarav::ClearCombatTarget()
+{
+	CombatTarget = nullptr;
+	UE_LOG(LogTemp, Warning, TEXT("Combat target cleared"));
+}
+
+void AAarav::SetFocusedActorManually(AActor* Actor)
+{
+	FocusedActor = Actor;
+	UE_LOG(LogTemp, Error, TEXT("✓ FocusedActor MANUALLY SET to: %s"), Actor ?  *Actor->GetName() : TEXT("nullptr"));
+}
+
+void AAarav::ClearFocusedActor()
+{
+	FocusedActor = nullptr;
+	UE_LOG(LogTemp, Warning, TEXT("✓ FocusedActor CLEARED"));
 }
