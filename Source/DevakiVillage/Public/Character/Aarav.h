@@ -81,6 +81,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* AaravMappingContext;
 
+	UPROPERTY(EditAnywhere, Category="GameOver Class")
+	TSubclassOf<class UGameOverWidget> GameOverWidgetClass;
+
 	/*
 	 * Animation Montages
 	 */

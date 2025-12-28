@@ -12,6 +12,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Component/AttributeComponent.h"
 #include "Enemy/Enemy.h"
+#include "HUD/GameOverWidget.h"
 #include "HUD/GameplayMainHUD.h"
 #include "HUD/MainOverlay.h"
 #include "Items/Souls.h"
@@ -548,6 +549,19 @@ void AAarav::Die_Implementation()
 
 	ActionState = EActionState::EAS_Dead;
 	DisableMeshCollision();
+
+	UGameOverWidget* GameOverWidget = CreateWidget<UGameOverWidget>(GetWorld(), GameOverWidgetClass);
+	if (GameOverWidget)
+	{
+		GameOverWidget->AddToViewport();
+		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(GameOverWidget->TakeWidget());
+		if (APlayerController* PC = Cast<APlayerController>(GetController()))
+		{
+			PC->SetInputMode(InputMode);
+			PC->bShowMouseCursor = true;
+		}
+	}
 }
 
 void AAarav::ClearCombatTarget()
