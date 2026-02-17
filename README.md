@@ -19,6 +19,8 @@ Verdant Souls is a combat-focused RPG prototype designed to showcase:
 
 The goal of this prototype is to build a scalable and extendable RPG foundation that can easily support additional enemies, weapons, and gameplay features.
 
+
+
 ---
 
 ## Core Mechanics Implemented
@@ -54,6 +56,12 @@ The goal of this prototype is to build a scalable and extendable RPG foundation 
   * 🟢 Souls
   * 🟡 Gold
 * Modular structure for adding new items
+
+
+![destroyverdantsouls1](https://github.com/user-attachments/assets/41b9233c-a40c-4359-adf5-175a70962161)
+
+
+
 <img width="3824" height="1944" alt="HighresScreenshot00001" src="https://github.com/user-attachments/assets/81fa6d31-ea56-4b20-ba02-a77170fb59ec" />
 
 ---
@@ -65,6 +73,9 @@ The goal of this prototype is to build a scalable and extendable RPG foundation 
 * Chase behavior when player is detected
 * Attack behavior when in range
 * State-driven AI design
+
+
+![verdantsoulsdemo2 (1)](https://github.com/user-attachments/assets/e374dec1-9a2f-417e-ab91-907f79291cc2)
 
 ---
 
